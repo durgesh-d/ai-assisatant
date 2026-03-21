@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: resume-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/aicareer}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:saurabh}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: 
+            client-secret: 
+            scope:
+              - read:user
+              - user:email
+
+server:
+  port: ${SERVER_PORT:8081}
+
+eureka:
+  client:
+    enabled: false
+
+groq:
+  api:
+    key: 
+
+rapidapi:
+  key: 

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AI Career — Register</title>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+    font-family:'Poppins',sans-serif; background:#0a0e1a; color:white;
+    min-height:100vh; display:flex; overflow:hidden;
+}
+.left {
+    width:45%; background:linear-gradient(135deg,#0a0e1a,#0f1628);
+    display:flex; flex-direction:column; justify-content:center;
+    padding:60px; position:relative; overflow:hidden;
+    border-right:1px solid rgba(0,255,200,0.08);
+}
+.shape { position:absolute; border-radius:50%; filter:blur(80px); animation:float 8s ease-in-out infinite; pointer-events:none; }
+.s1 { width:300px; height:300px; background:rgba(0,255,200,0.07); top:-80px; right:-60px; }
+.s2 { width:200px; height:200px; background:rgba(124,58,237,0.07); bottom:80px; left:-60px; animation-delay:3s; }
+.s3 { width:150px; height:150px; background:rgba(0,150,255,0.07); top:40%; right:5%; animation-delay:5s; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+
+.brand { display:flex; align-items:center; gap:12px; margin-bottom:50px; }
+.brand-icon {
+    width:46px; height:46px; border-radius:12px;
+    background:linear-gradient(135deg,#00ffcc,#00ccff);
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; color:#0a0e1a;
+}
+.brand-name {
+    font-size:18px; font-weight:700;
+    background:linear-gradient(90deg,#00ffcc,#00ccff);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.hero-title { font-size:2.5rem; font-weight:800; line-height:1.2; margin-bottom:18px; }
+.hero-title .highlight {
+    background:linear-gradient(135deg,#00ffcc,#00ccff);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.hero-desc { color:#555; font-size:14px; line-height:1.8; margin-bottom:40px; }
+
+.steps { display:flex; flex-direction:column; gap:18px; margin-bottom:45px; }
+.step-item { display:flex; align-items:center; gap:15px; }
+.step-num {
+    width:36px; height:36px; border-radius:50%; flex-shrink:0;
+    background:rgba(0,255,200,0.1); border:1px solid rgba(0,255,200,0.3);
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:700; color:#00ffcc;
+}
+.step-text .st { font-size:13px; font-weight:600; color:#e0e0e0; }
+.step-text .ss { font-size:12px; color:#555; margin-top:2px; }
+
+.founder-card {
+    display:flex; align-items:center; gap:15px;
+    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07);
+    border-radius:14px; padding:16px 20px; width:fit-content;
+}
+.founder-avatar {
+    width:46px; height:46px; border-radius:50%;
+    background:linear-gradient(135deg,#00ffcc,#7c3aed);
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; font-weight:800; color:white;
+}
+.founder-info .fn { font-size:13px; font-weight:600; color:#e0e0e0; }
+.founder-info .fr { font-size:11px; color:#555; margin-top:2px; }
+.founder-info .fd { font-size:10px; color:#00ffcc; margin-top:3px; }
+.founder-badge {
+    margin-left:auto; background:rgba(0,255,200,0.08);
+    border:1px solid rgba(0,255,200,0.2); color:#00ffcc;
+    font-size:10px; padding:4px 10px; border-radius:20px;
+}
+
+.right {
+    width:55%; display:flex; align-items:center;
+    justify-content:center; padding:40px; background:#0a0e1a;
+}
+.register-box { width:100%; max-width:420px; }
+.register-title { font-size:24px; font-weight:700; margin-bottom:6px; }
+.register-sub { color:#555; font-size:13px; margin-bottom:30px; }
+
+.input-row { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+.input-group { margin-bottom:16px; }
+.input-label { font-size:12px; color:#888; display:block; margin-bottom:7px; }
+.input-wrap { position:relative; }
+.input-wrap i { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#444; font-size:13px; }
+.input-wrap input {
+    width:100%; padding:13px 14px 13px 40px;
+    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+    border-radius:11px; color:white; font-family:'Poppins',sans-serif;
+    font-size:13px; transition:0.3s;
+}
+.input-wrap input:focus { outline:none; border-color:rgba(0,255,200,0.4); background:rgba(0,255,200,0.02); }
+.input-wrap input::placeholder { color:#333; }
+
+.strength-bar { height:4px; border-radius:2px; background:rgba(255,255,255,0.06); overflow:hidden; margin-top:8px; }
+.strength-fill { height:100%; width:0%; border-radius:2px; transition:0.3s; }
+.strength-text { font-size:11px; margin-top:4px; color:#555; }
+
+.btn-register {
+    width:100%; padding:14px;
+    background:linear-gradient(135deg,#00ffcc,#00ccff);
+    border:none; border-radius:11px; color:#0a0e1a;
+    font-family:'Poppins',sans-serif; font-size:14px;
+    font-weight:700; cursor:pointer; transition:0.3s;
+    display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:15px;
+}
+.btn-register:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,255,200,0.35); }
+
+.divider {
+    display:flex; align-items:center; gap:12px;
+    margin:18px 0; color:#2a2a2a; font-size:12px;
+}
+.divider::before,.divider::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.06); }
+
+.btn-github {
+    width:100%; padding:13px;
+    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+    border-radius:11px; color:white; font-family:'Poppins',sans-serif;
+    font-size:13px; font-weight:600; cursor:pointer; transition:0.3s;
+    display:flex; align-items:center; justify-content:center; gap:10px; text-decoration:none;
+}
+.btn-github:hover { background:rgba(255,255,255,0.08); transform:translateY(-1px); }
+
+.error-box {
+    background:rgba(255,80,80,0.08); border:1px solid rgba(255,80,80,0.25);
+    color:#ff6b6b; padding:11px 14px; border-radius:10px;
+    font-size:12px; margin-bottom:16px; display:none; align-items:center; gap:8px;
+}
+.success-box {
+    background:rgba(0,255,150,0.08); border:1px solid rgba(0,255,150,0.25);
+    color:#00ff96; padding:11px 14px; border-radius:10px;
+    font-size:12px; margin-bottom:16px; display:none; align-items:center; gap:8px;
+}
+.login-link { text-align:center; margin-top:22px; font-size:13px; color:#444; }
+.login-link a { color:#00ffcc; text-decoration:none; font-weight:500; }
+
+@media(max-width:768px) {
+    .left { display:none; }
+    .right { width:100%; padding:30px 20px; }
+    .input-row { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="left">
+    <div class="shape s1"></div>
+    <div class="shape s2"></div>
+    <div class="shape s3"></div>
+    <div style="position:relative;z-index:2;">
+        <div class="brand">
+            <div class="brand-icon"><i class="fas fa-robot"></i></div>
+            <div class="brand-name">AI Career Assistant</div>
+        </div>
+        <div class="hero-title">Start Your <span class="highlight">AI Journey</span><br>Today</div>
+        <div class="hero-desc">Join thousands of professionals using AI to land their dream jobs faster.</div>
+        <div class="steps">
+            <div class="step-item">
+                <div class="step-num">1</div>
+                <div class="step-text">
+                    <div class="st">Create Account</div>
+                    <div class="ss">Register with email in seconds</div>
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-num">2</div>
+                <div class="step-text">
+                    <div class="st">Verify with GitHub</div>
+                    <div class="ss">Secure OAuth2 authentication</div>
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-num">3</div>
+                <div class="step-text">
+                    <div class="st">Start Building Career</div>
+                    <div class="ss">Analyze, match, and generate portfolio</div>
+                </div>
+            </div>
+        </div>
+        <div class="founder-card">
+            <div class="founder-avatar">SP</div>
+            <div class="founder-info">
+                <div class="fn">Saurabh Pal</div>
+                <div class="fr">Founder & Developer</div>
+                <div class="fd"><i class="fas fa-calendar-alt" style="margin-right:4px;"></i>Created March 20, 2026</div>
+            </div>
+            <div class="founder-badge"><i class="fas fa-crown" style="margin-right:4px;"></i>Founder</div>
+        </div>
+    </div>
+</div>
+
+<div class="right">
+    <div class="register-box">
+        <div class="register-title">Create Account 🚀</div>
+        <div class="register-sub">Join AI Career Assistant for free</div>
+
+        <div class="error-box" id="errorBox">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="errorMsg"></span>
+        </div>
+        <div class="success-box" id="successBox">
+            <i class="fas fa-check-circle"></i>
+            <span id="successMsg"></span>
+        </div>
+
+        <div class="input-row">
+            <div class="input-group">
+                <label class="input-label">First Name</label>
+                <div class="input-wrap">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="firstName" placeholder="Saurabh">
+                </div>
+            </div>
+            <div class="input-group">
+                <label class="input-label">Last Name</label>
+                <div class="input-wrap">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="lastName" placeholder="Pal">
+                </div>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label class="input-label">Email Address</label>
+            <div class="input-wrap">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="email" placeholder="you@example.com">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label class="input-label">Password</label>
+            <div class="input-wrap">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="password" placeholder="Min 6 characters" oninput="checkStrength(this.value)">
+            </div>
+            <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+            <div class="strength-text" id="strengthText">Enter password</div>
+        </div>
+
+        <button class="btn-register" onclick="register()">
+            <i class="fas fa-user-plus"></i> Create Account
+        </button>
+
+        <div class="divider">or register with</div>
+
+        <a class="btn-github" href="/oauth2/authorization/github">
+            <i class="fab fa-github" style="font-size:18px;"></i>
+            Continue with GitHub
+        </a>
+
+        <div class="login-link">
+            Already have an account? <a href="login.html">Sign in →</a>
+        </div>
+    </div>
+</div>
+
+<script>
+function checkStrength(password) {
+    const fill = document.getElementById("strengthFill");
+    const text = document.getElementById("strengthText");
+    if (!password) { fill.style.width="0%"; text.innerText="Enter password"; return; }
+    if (password.length < 4) { fill.style.width="25%"; fill.style.background="#ff6b6b"; text.style.color="#ff6b6b"; text.innerText="Too weak"; }
+    else if (password.length < 6) { fill.style.width="50%"; fill.style.background="#ffd700"; text.style.color="#ffd700"; text.innerText="Fair"; }
+    else if (password.length < 10) { fill.style.width="75%"; fill.style.background="#00ccff"; text.style.color="#00ccff"; text.innerText="Good"; }
+    else { fill.style.width="100%"; fill.style.background="#00ff96"; text.style.color="#00ff96"; text.innerText="Strong ✓"; }
+}
+
+async function register() {
+    const firstName = document.getElementById("firstName").value.trim();
+    const lastName = document.getElementById("lastName").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const errorBox = document.getElementById("errorBox");
+    const successBox = document.getElementById("successBox");
+
+    errorBox.style.display = "none";
+    successBox.style.display = "none";
+
+    if (!firstName || !email || !password) {
+        document.getElementById("errorMsg").innerText = "सगळी fields भरा";
+        errorBox.style.display = "flex"; return;
+    }
+    if (password.length < 6) {
+        document.getElementById("errorMsg").innerText = "Password कमीत कमी 6 characters हवा";
+        errorBox.style.display = "flex"; return;
+    }
+
+    try {
+        const res = await fetch("/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: firstName + " " + lastName, email, password })
+        });
+        if (res.ok) {
+            document.getElementById("successMsg").innerText = "Account created! Login करा 🎉";
+            successBox.style.display = "flex";
+            setTimeout(() => window.location.href = "login.html", 2000);
+        } else {
+            document.getElementById("errorMsg").innerText = "Registration failed ❌";
+            errorBox.style.display = "flex";
+        }
+    } catch (e) {
+        document.getElementById("errorMsg").innerText = "Server Error ❌";
+        errorBox.style.display = "flex";
+    }
+}
+</script>
+</body>
+</html>

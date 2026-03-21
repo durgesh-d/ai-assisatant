@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AI Career Dashboard</title>
+<meta charset="UTF-8">
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const oauthToken = urlParams.get("token");
+const githubVerified = urlParams.get("github");
+if (oauthToken) localStorage.setItem("token", oauthToken.trim());
+if (githubVerified === "verified") localStorage.setItem("github_verified", "true");
+if (oauthToken || githubVerified) window.history.replaceState({}, document.title, "/dashboard.html");
+const tokenCheck = localStorage.getItem("token");
+if (!tokenCheck || tokenCheck === "undefined" || tokenCheck === "null" || tokenCheck.trim() === "") {
+    window.location.replace("login.html");
+}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+:root {
+    --bg:#0a0e1a; --bg2:#0f1628; --bg3:#131c30;
+    --primary:#00ffcc; --secondary:#00ccff; --purple:#7c3aed;
+    --card:rgba(255,255,255,0.04); --border:rgba(255,255,255,0.08);
+    --border-glow:rgba(0,255,200,0.2); --text:#e0e0e0; --text2:#666;
+    --sidebar-width:260px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Poppins',sans-serif; background:var(--bg); color:var(--text); display:flex; min-height:100vh; overflow-x:hidden;overflow-y:auto; }
+
+body.light {
+    --bg:#f0f4f8; --bg2:#e2e8f0;
+    --card:rgba(255,255,255,0.8); --border:rgba(0,0,0,0.08);
+    --border-glow:rgba(0,200,150,0.3); --text:#1a202c; --text2:#718096;
+}
+body.light .sidebar { background:#e2e8f0; border-color:rgba(0,0,0,0.08); }
+body.light .topbar { background:rgba(240,244,248,0.95); border-color:rgba(0,0,0,0.08); }
+body.light textarea { background:rgba(255,255,255,0.9); color:#1a202c; }
+body.light .nav-item { color:#718096; }
+body.light .nav-item.active { background:rgba(0,200,150,0.1); color:#00b894; }
+body.light .nav-item:hover { background:rgba(0,0,0,0.05); }
+body.light .btn-logout { background:rgba(255,80,80,0.08); }
+body.light .score-ring .bg-circle { stroke:rgba(0,0,0,0.08); }
+body.light .result-card.green { background:rgba(0,200,100,0.06); }
+body.light .result-card.red { background:rgba(255,80,80,0.06); }
+body.light .result-card.yellow { background:rgba(255,180,0,0.06); }
+body.light .result-card.purple { background:rgba(120,80,255,0.06); }
+body.light .result-card.blue { background:rgba(0,150,255,0.06); }
+body.light .question-card { background:rgba(255,255,255,0.9); }
+body.light .chat-input { background:rgba(255,255,255,0.9); color:#1a202c; }
+body.light .bubble-content.ai { background:rgba(255,255,255,0.9); }
+body.light .template-card { background:rgba(255,255,255,0.9); }
+body.light .history-card { background:rgba(255,255,255,0.9); }
+body.light .stat-box { background:rgba(255,255,255,0.9); }
+body.light .profile-input { background:rgba(255,255,255,0.9); color:#1a202c; }
+body.light .job-card { background:rgba(255,255,255,0.9); }
+body.light .job-search-input { background:rgba(255,255,255,0.9); color:#1a202c; }
+
+.sidebar { width:var(--sidebar-width); background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; position:fixed; height:100vh; z-index:200; transition:0.3s; }
+.sidebar-logo { padding:25px 20px; border-bottom:1px solid var(--border); }
+.logo-text { font-size:18px; font-weight:700; background:linear-gradient(90deg,var(--primary),var(--secondary)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; display:flex; align-items:center; gap:10px; }
+.logo-text i { -webkit-text-fill-color:var(--primary); font-size:20px; }
+.logo-sub { font-size:11px; color:var(--text2); margin-top:4px; margin-left:30px; }
+.sidebar-user { padding:18px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; }
+.user-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--secondary)); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:#0a0e1a; flex-shrink:0; }
+.user-name { font-size:13px; font-weight:600; }
+.user-status { font-size:11px; color:var(--text2); display:flex; align-items:center; gap:5px; margin-top:2px; }
+.user-status .dot { width:6px; height:6px; border-radius:50%; background:#00ff96; }
+.github-badge { font-size:10px; color:#00ff96; background:rgba(0,255,150,0.1); border:1px solid rgba(0,255,150,0.2); padding:2px 8px; border-radius:10px; margin-top:4px; display:none; }
+.sidebar-nav { flex:1; padding:15px 12px; overflow-y:auto; }
+.nav-label { font-size:10px; color:var(--text2); letter-spacing:1.5px; text-transform:uppercase; padding:10px 10px 6px; margin-top:5px; }
+.nav-item { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:10px; cursor:pointer; transition:0.2s; margin-bottom:3px; font-size:13px; color:var(--text2); border:1px solid transparent; user-select:none; }
+.nav-item:hover { background:var(--card); color:var(--text); }
+.nav-item.active { background:rgba(0,255,200,0.08); border-color:rgba(0,255,200,0.2); color:var(--primary); }
+.nav-item i { width:18px; text-align:center; font-size:14px; }
+.nav-badge { margin-left:auto; background:var(--primary); color:#0a0e1a; font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; display:none; }
+.sidebar-bottom { padding:15px 12px; border-top:1px solid var(--border); }
+.btn-logout { width:100%; display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; background:rgba(255,80,80,0.08); border:1px solid rgba(255,80,80,0.2); color:#ff6b6b; cursor:pointer; font-family:'Poppins',sans-serif; font-size:13px; transition:0.2s; }
+.btn-logout:hover { background:rgba(255,80,80,0.15); }
+
+.main { margin-left:var(--sidebar-width); flex:1; display:flex; flex-direction:column; height:100vh; overflow-y:auto; }
+.topbar { padding:15px 30px; background:rgba(10,14,26,0.8); border-bottom:1px solid var(--border); backdrop-filter:blur(10px); position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; }
+.topbar-title { font-size:16px; font-weight:600; }
+.topbar-title span { color:var(--primary); }
+.topbar-right { display:flex; align-items:center; gap:12px; }
+.score-mini { background:var(--card); border:1px solid var(--border-glow); padding:6px 16px; border-radius:20px; font-size:12px; display:flex; align-items:center; gap:8px; }
+.score-mini .sv { color:var(--primary); font-weight:700; font-size:16px; }
+.theme-toggle { width:36px; height:36px; border-radius:10px; background:var(--card); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text2); font-size:15px; transition:0.3s; }
+.theme-toggle:hover { border-color:var(--border-glow); color:var(--primary); }
+.content { padding:25px 30px; flex:1;padding:25px 30px; flex:1;  }
+
+.card { background:var(--card); border:1px solid var(--border); padding:22px; border-radius:16px; transition:0.3s; position:relative; overflow:hidden; }
+.card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--primary),var(--secondary)); opacity:0; transition:0.3s; }
+.card:hover { border-color:var(--border-glow); box-shadow:0 8px 30px rgba(0,255,200,0.06); }
+.card:hover::before { opacity:1; }
+.card-title { font-size:14px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.card-title i { color:var(--primary); }
+
+textarea { width:100%; height:130px; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:10px; color:var(--text); padding:14px; font-family:'Poppins',sans-serif; font-size:13px; resize:vertical; transition:0.3s; }
+textarea:focus { outline:none; border-color:var(--border-glow); }
+textarea::placeholder { color:#444; }
+
+.file-upload { border:2px dashed rgba(0,255,200,0.2); border-radius:12px; padding:30px; text-align:center; cursor:pointer; transition:0.3s; background:rgba(0,255,200,0.02); }
+.file-upload:hover { border-color:rgba(0,255,200,0.5); background:rgba(0,255,200,0.04); }
+.file-upload i { font-size:32px; color:var(--primary); margin-bottom:10px; display:block; }
+.file-upload p { color:var(--text2); font-size:13px; }
+.file-upload span { color:var(--primary); font-weight:600; }
+input[type="file"] { display:none; }
+
+.btn { display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg,var(--primary),var(--secondary)); border:none; padding:12px 24px; border-radius:10px; cursor:pointer; color:#0a0e1a; font-family:'Poppins',sans-serif; font-size:13px; font-weight:700; transition:0.3s; width:100%; justify-content:center; margin-top:14px; }
+.btn:hover { transform:translateY(-2px); box-shadow:0 6px 25px rgba(0,255,200,0.35); }
+.btn-purple { background:linear-gradient(135deg,#a78bfa,var(--purple)); color:white; }
+.btn-outline { background:transparent; border:1px solid var(--border-glow); color:var(--primary); width:auto; margin-top:0; }
+.btn-outline:hover { background:rgba(0,255,200,0.08); box-shadow:none; transform:none; }
+
+.score-section { display:flex; align-items:center; gap:25px; background:linear-gradient(135deg,rgba(0,255,200,0.05),rgba(0,150,255,0.05)); border:1px solid var(--border-glow); border-radius:16px; padding:25px; margin-bottom:20px; }
+.score-ring { width:100px; height:100px; position:relative; flex-shrink:0; }
+.score-ring svg { width:100%; height:100%; transform:rotate(-90deg); }
+.score-ring .bg-circle { fill:none; stroke:rgba(255,255,255,0.06); stroke-width:8; }
+.score-ring .progress-circle { fill:none; stroke:url(#scoreGrad); stroke-width:8; stroke-linecap:round; stroke-dasharray:283; stroke-dashoffset:283; transition:stroke-dashoffset 1.5s ease; }
+.score-ring .score-label { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:22px; font-weight:800; color:var(--primary); }
+.score-info { flex:1; }
+.score-title { font-size:20px; font-weight:700; margin-bottom:5px; }
+.score-sub { font-size:12px; color:var(--text2); }
+.score-bar-bg { background:rgba(255,255,255,0.06); height:6px; border-radius:3px; overflow:hidden; margin-top:12px; }
+.score-bar-fill { height:100%; background:linear-gradient(90deg,var(--primary),var(--secondary)); border-radius:3px; width:0%; transition:width 1.5s ease; }
+
+.result-grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px; }
+.result-card { border-radius:14px; padding:18px; }
+.result-card.green { background:rgba(0,255,150,0.04); border:1px solid rgba(0,255,150,0.15); }
+.result-card.red { background:rgba(255,80,80,0.04); border:1px solid rgba(255,80,80,0.15); }
+.result-card.yellow { background:rgba(255,200,0,0.04); border:1px solid rgba(255,200,0,0.15); }
+.result-card.purple { background:rgba(120,80,255,0.04); border:1px solid rgba(120,80,255,0.15); }
+.result-card.blue { background:rgba(0,200,255,0.04); border:1px solid rgba(0,200,255,0.15); }
+.result-card-title { font-size:12px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.item-row { display:flex; align-items:flex-start; gap:8px; font-size:12px; color:#bbb; margin-bottom:8px; line-height:1.6; }
+.item-row .icon { flex-shrink:0; margin-top:2px; font-size:11px; }
+.chip { display:inline-block; background:rgba(120,80,255,0.12); border:1px solid rgba(120,80,255,0.25); color:#a78bfa; padding:4px 12px; border-radius:20px; font-size:11px; margin:3px 3px 3px 0; }
+
+.cover-letter-box { background:rgba(167,139,250,0.04); border:1px solid rgba(167,139,250,0.2); border-radius:14px; padding:25px; }
+.cover-letter-text { font-size:13px; color:#ccc; line-height:2; white-space:pre-wrap; }
+.copy-btn { display:inline-flex; align-items:center; gap:7px; background:rgba(167,139,250,0.12); border:1px solid rgba(167,139,250,0.3); color:#a78bfa; padding:9px 18px; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Poppins',sans-serif; transition:0.2s; margin-top:15px; }
+.copy-btn:hover { background:rgba(167,139,250,0.2); }
+
+.portfolio-preview { width:100%; height:420px; border:none; border-radius:14px; background:white; margin-top:15px; }
+.preview-actions { display:flex; gap:10px; margin-top:12px; }
+.preview-action-btn { display:inline-flex; align-items:center; gap:6px; padding:9px 18px; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Poppins',sans-serif; transition:0.2s; border:none; }
+.preview-action-btn.open { background:rgba(0,255,200,0.1); border:1px solid rgba(0,255,200,0.25); color:var(--primary); }
+.preview-action-btn.download { background:rgba(124,58,237,0.1); border:1px solid rgba(124,58,237,0.25); color:#a78bfa; }
+.preview-action-btn:hover { transform:translateY(-1px); }
+
+.question-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px; margin-bottom:12px; transition:0.3s; display:flex; gap:15px; align-items:flex-start; }
+.question-card:hover { border-color:var(--border-glow); }
+.q-num { width:32px; height:32px; border-radius:8px; flex-shrink:0; background:rgba(0,255,200,0.1); border:1px solid rgba(0,255,200,0.2); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--primary); }
+.q-text { font-size:13px; color:var(--text); line-height:1.7; }
+.role-chip { cursor:pointer; padding:6px 16px; border-radius:20px; font-size:12px; transition:0.2s; display:inline-block; margin:4px 4px 4px 0; }
+
+.chat-wrapper { display:flex; flex-direction:column; height:calc(100vh - 140px); }
+.chat-messages { flex:1; overflow-y:auto; padding:10px 0; display:flex; flex-direction:column; gap:15px; }
+.chat-messages::-webkit-scrollbar { width:4px; }
+.chat-messages::-webkit-scrollbar-thumb { background:var(--border-glow); border-radius:2px; }
+.chat-bubble { display:flex; gap:12px; align-items:flex-start; animation:bubbleIn 0.3s ease; }
+@keyframes bubbleIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.chat-bubble.user { flex-direction:row-reverse; }
+.bubble-avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; font-weight:700; }
+.bubble-avatar.ai { background:linear-gradient(135deg,var(--primary),var(--secondary)); color:#0a0e1a; }
+.bubble-avatar.user { background:linear-gradient(135deg,#a78bfa,var(--purple)); color:white; }
+.bubble-content { max-width:75%; padding:12px 16px; border-radius:16px; font-size:13px; line-height:1.7; }
+.bubble-content.ai { background:var(--card); border:1px solid var(--border); color:var(--text); border-top-left-radius:4px; }
+.bubble-content.user { background:linear-gradient(135deg,rgba(0,255,200,0.12),rgba(0,150,255,0.12)); border:1px solid var(--border-glow); color:var(--text); border-top-right-radius:4px; }
+.bubble-time { font-size:10px; color:var(--text2); margin-top:4px; }
+.chat-bubble.user .bubble-time { text-align:right; }
+.chat-input-wrap { display:flex; gap:10px; padding-top:15px; border-top:1px solid var(--border); margin-top:10px; }
+.chat-input { flex:1; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:13px 16px; color:var(--text); font-family:'Poppins',sans-serif; font-size:13px; resize:none; height:50px; transition:0.3s; outline:none; }
+.chat-input:focus { border-color:var(--border-glow); }
+.chat-input::placeholder { color:#444; }
+.chat-send-btn { width:50px; height:50px; border-radius:12px; background:linear-gradient(135deg,var(--primary),var(--secondary)); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; color:#0a0e1a; transition:0.3s; flex-shrink:0; }
+.chat-send-btn:hover { transform:scale(1.05); }
+.chat-suggestions { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:15px; }
+.suggestion-chip { background:var(--card); border:1px solid var(--border); color:var(--text2); padding:7px 14px; border-radius:20px; font-size:12px; cursor:pointer; transition:0.2s; }
+.suggestion-chip:hover { border-color:var(--border-glow); color:var(--primary); }
+.typing-indicator { display:flex; gap:5px; align-items:center; padding:12px 16px; background:var(--card); border:1px solid var(--border); border-radius:16px; border-top-left-radius:4px; width:fit-content; }
+.typing-dot { width:6px; height:6px; border-radius:50%; background:var(--primary); animation:typingBounce 1.2s ease-in-out infinite; }
+.typing-dot:nth-child(2) { animation-delay:0.2s; }
+.typing-dot:nth-child(3) { animation-delay:0.4s; }
+@keyframes typingBounce { 0%,100%{transform:translateY(0);opacity:0.3} 50%{transform:translateY(-5px);opacity:1} }
+
+.templates-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:25px; }
+.template-card { background:var(--card); border:2px solid var(--border); border-radius:16px; overflow:hidden; cursor:pointer; transition:0.3s; position:relative; }
+.template-card:hover { transform:translateY(-5px); box-shadow:0 10px 30px rgba(0,255,200,0.15); }
+.template-card.selected { border-color:var(--primary); box-shadow:0 0 20px rgba(0,255,200,0.3); }
+.template-preview { height:160px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+.template-preview .t-lines { width:80%; }
+.t-line { height:6px; border-radius:3px; margin-bottom:6px; }
+.t-line.title { height:10px; width:60%; }
+.t-line.short { width:40%; }
+.t-line.xs { width:30%; height:4px; }
+.template-info { padding:14px; }
+.template-name { font-size:13px; font-weight:600; margin-bottom:4px; }
+.template-desc { font-size:11px; color:var(--text2); }
+.template-badge { position:absolute; top:10px; right:10px; font-size:10px; padding:3px 10px; border-radius:20px; font-weight:600; }
+.selected-check { position:absolute; top:10px; left:10px; width:24px; height:24px; border-radius:50%; background:var(--primary); color:#0a0e1a; display:none; align-items:center; justify-content:center; font-size:12px; }
+.template-card.selected .selected-check { display:flex; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px; }
+.form-group { margin-bottom:0; }
+.form-label { font-size:12px; color:var(--text2); display:block; margin-bottom:7px; }
+.form-input { width:100%; padding:12px 14px; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:'Poppins',sans-serif; font-size:13px; transition:0.3s; outline:none; }
+.form-input:focus { border-color:var(--border-glow); }
+.form-input::placeholder { color:#444; }
+.form-textarea { width:100%; padding:12px 14px; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:'Poppins',sans-serif; font-size:13px; transition:0.3s; outline:none; resize:vertical; min-height:80px; }
+.form-textarea:focus { border-color:var(--border-glow); }
+.form-textarea::placeholder { color:#444; }
+.template-result-preview { width:100%; height:500px; border:none; border-radius:14px; margin-top:15px; background:white; }
+
+.history-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px; margin-bottom:12px; transition:0.3s; display:flex; align-items:center; gap:15px; }
+.history-card:hover { border-color:var(--border-glow); transform:translateX(4px); }
+.history-score-badge { width:52px; height:52px; border-radius:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; }
+.history-info { flex:1; min-width:0; }
+.history-title { font-size:13px; font-weight:600; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.history-meta { font-size:11px; color:var(--text2); display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.history-actions { display:flex; gap:8px; flex-shrink:0; }
+.history-btn { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:0.2s; font-size:12px; border:none; }
+.history-btn.view { background:rgba(0,255,200,0.1); border:1px solid rgba(0,255,200,0.2); color:var(--primary); }
+.history-btn.delete { background:rgba(255,80,80,0.08); border:1px solid rgba(255,80,80,0.2); color:#ff6b6b; }
+.history-btn:hover { transform:scale(1.1); }
+
+/* PROFILE */
+.profile-hero { background:linear-gradient(135deg,rgba(0,255,200,0.06),rgba(0,150,255,0.06)); border:1px solid var(--border-glow); border-radius:20px; padding:35px; margin-bottom:20px; display:flex; align-items:center; gap:25px; }
+.profile-avatar-big { width:90px; height:90px; border-radius:50%; flex-shrink:0; background:linear-gradient(135deg,var(--primary),var(--secondary)); display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:800; color:#0a0e1a; box-shadow:0 0 30px rgba(0,255,200,0.3); position:relative; }
+.profile-avatar-big .verified-ring { position:absolute; bottom:-2px; right:-2px; width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,#00ff96,#00ccff); display:none; align-items:center; justify-content:center; font-size:12px; color:#0a0e1a; border:2px solid var(--bg); }
+.profile-avatar-big.verified .verified-ring { display:flex; }
+.profile-hero-info { flex:1; }
+.profile-hero-name { font-size:24px; font-weight:700; margin-bottom:5px; }
+.profile-hero-email { font-size:13px; color:var(--text2); margin-bottom:10px; }
+.profile-hero-badges { display:flex; gap:10px; flex-wrap:wrap; }
+.badge { padding:5px 14px; border-radius:20px; font-size:11px; font-weight:600; display:inline-flex; align-items:center; gap:6px; }
+.badge.github { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#ccc; }
+.badge.verified { background:rgba(0,255,150,0.1); border:1px solid rgba(0,255,150,0.3); color:#00ff96; }
+.badge.member { background:rgba(0,200,255,0.1); border:1px solid rgba(0,200,255,0.3); color:#00ccff; }
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:15px; margin-bottom:20px; }
+.stat-box { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; text-align:center; transition:0.3s; }
+.stat-box:hover { border-color:var(--border-glow); transform:translateY(-3px); }
+.stat-icon { font-size:22px; margin-bottom:10px; display:block; }
+.stat-value { font-size:28px; font-weight:800; color:var(--primary); display:block; margin-bottom:4px; }
+.stat-label { font-size:11px; color:var(--text2); }
+.profile-edit-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:22px; }
+.profile-input { width:100%; padding:12px 14px; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:'Poppins',sans-serif; font-size:13px; transition:0.3s; outline:none; }
+.profile-input:focus { border-color:var(--border-glow); }
+.profile-input::placeholder { color:#444; }
+
+/* JOB LISTINGS */
+.job-search-bar {
+    display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;
+}
+.job-search-input {
+    flex:1; min-width:150px; padding:12px 16px;
+    background:rgba(0,0,0,0.3); border:1px solid var(--border);
+    border-radius:10px; color:var(--text); font-family:'Poppins',sans-serif;
+    font-size:13px; outline:none; transition:0.3s;
+}
+.job-search-input:focus { border-color:var(--border-glow); }
+.job-search-input::placeholder { color:#444; }
+
+.job-card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:16px; padding:20px; margin-bottom:15px;
+    transition:0.3s; position:relative; overflow:hidden;
+}
+.job-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--primary),var(--secondary)); opacity:0; transition:0.3s; }
+.job-card:hover { border-color:var(--border-glow); transform:translateY(-2px); box-shadow:0 8px 25px rgba(0,255,200,0.08); }
+.job-card:hover::before { opacity:1; }
+
+.job-header { display:flex; align-items:flex-start; gap:15px; margin-bottom:12px; }
+.job-logo {
+    width:48px; height:48px; border-radius:12px; flex-shrink:0;
+    background:linear-gradient(135deg,rgba(0,255,200,0.15),rgba(0,150,255,0.15));
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; color:var(--primary); font-weight:800;
+    border:1px solid var(--border);
+}
+.job-info { flex:1; min-width:0; }
+.job-title { font-size:15px; font-weight:700; color:var(--text); margin-bottom:4px; }
+.job-company { font-size:13px; color:var(--primary); font-weight:500; }
+.job-meta { display:flex; gap:12px; flex-wrap:wrap; margin-top:6px; }
+.job-meta-item { font-size:11px; color:var(--text2); display:flex; align-items:center; gap:5px; }
+.job-meta-item i { color:var(--primary); font-size:10px; }
+
+.job-desc { font-size:12px; color:var(--text2); line-height:1.7; margin-bottom:15px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+
+.job-footer { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+.job-tags { display:flex; gap:8px; flex-wrap:wrap; }
+.job-tag { font-size:11px; padding:3px 12px; border-radius:20px; font-weight:500; }
+.job-tag.fulltime { background:rgba(0,255,150,0.1); color:#00ff96; border:1px solid rgba(0,255,150,0.2); }
+.job-tag.remote { background:rgba(0,200,255,0.1); color:#00ccff; border:1px solid rgba(0,200,255,0.2); }
+.job-tag.salary { background:rgba(255,215,0,0.1); color:#ffd700; border:1px solid rgba(255,215,0,0.2); }
+
+.job-apply-btn {
+    padding:9px 22px; border-radius:9px;
+    background:linear-gradient(135deg,var(--primary),var(--secondary));
+    color:#0a0e1a; font-family:'Poppins',sans-serif; font-size:12px;
+    font-weight:700; cursor:pointer; border:none; transition:0.3s;
+    text-decoration:none; display:inline-flex; align-items:center; gap:6px;
+}
+.job-apply-btn:hover { transform:translateY(-1px); box-shadow:0 5px 15px rgba(0,255,200,0.3); }
+
+.job-quick-chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+.job-quick-chip {
+    padding:7px 16px; border-radius:20px; font-size:12px; cursor:pointer;
+    transition:0.2s; border:1px solid var(--border); color:var(--text2);
+    background:var(--card);
+}
+.job-quick-chip:hover { border-color:var(--border-glow); color:var(--primary); }
+
+.jobs-count { font-size:12px; color:var(--text2); margin-bottom:15px; }
+.jobs-count span { color:var(--primary); font-weight:600; }
+
+/* MODAL */
+.modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px; }
+.modal-overlay.open { display:flex; }
+.modal-box { background:var(--bg2); border:1px solid var(--border); border-radius:20px; width:100%; max-width:800px; max-height:90vh; overflow-y:auto; padding:28px; }
+.modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.modal-title { font-size:16px; font-weight:600; }
+.modal-close { background:rgba(255,80,80,0.1); border:1px solid rgba(255,80,80,0.2); color:#ff6b6b; padding:8px 16px; border-radius:8px; cursor:pointer; font-family:'Poppins',sans-serif; font-size:12px; }
+.modal-content { font-size:13px; color:var(--text2); line-height:1.9; white-space:pre-wrap; }
+
+.loading-state { text-align:center; padding:50px 20px; color:var(--text2); }
+.loading-state i { font-size:32px; color:var(--primary); margin-bottom:12px; display:block; }
+.empty-state { text-align:center; padding:50px 20px; color:var(--text2); }
+.empty-state i { font-size:40px; color:#1e293b; margin-bottom:15px; display:block; }
+
+.toast { position:fixed; bottom:25px; right:25px; background:rgba(0,255,200,0.12); border:1px solid rgba(0,255,200,0.3); color:var(--primary); padding:12px 20px; border-radius:12px; font-size:13px; z-index:9999; backdrop-filter:blur(10px); animation:toastIn 0.3s ease; display:flex; align-items:center; gap:8px; }
+@keyframes toastIn { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+@media(max-width:900px) {
+    .sidebar { transform:translateX(-100%); }
+    .sidebar.open { transform:translateX(0); }
+    .main { margin-left:0; }
+    .result-grid { grid-template-columns:1fr; }
+    .templates-grid { grid-template-columns:1fr 1fr; }
+    .form-grid { grid-template-columns:1fr; }
+    .stats-grid { grid-template-columns:1fr 1fr; }
+    .profile-hero { flex-direction:column; text-align:center; }
+    .job-search-bar { flex-direction:column; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-text"><i class="fas fa-robot"></i> AI Career</div>
+        <div class="logo-sub">Resume Intelligence Platform</div>
+    </div>
+    <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">U</div>
+        <div>
+            <div class="user-name" id="sidebarName">User</div>
+            <div class="user-status"><span class="dot"></span> Active Session</div>
+            <div class="github-badge" id="githubBadge"><i class="fab fa-github"></i> Verified</div>
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-label">Main Tools</div>
+        <div class="nav-item active" onclick="switchTab('analyze',this)"><i class="fas fa-search"></i> Resume Analyzer</div>
+        <div class="nav-item" onclick="switchTab('pdf',this)"><i class="fas fa-file-pdf"></i> Upload PDF</div>
+        <div class="nav-item" onclick="switchTab('match',this)"><i class="fas fa-briefcase"></i> Job Match</div>
+        <div class="nav-item" onclick="switchTab('cover',this)"><i class="fas fa-envelope"></i> Cover Letter</div>
+        <div class="nav-label">More Tools</div>
+        <div class="nav-item" onclick="switchTab('chat',this)">
+            <i class="fas fa-robot"></i> AI Chat
+            <span style="margin-left:auto;background:linear-gradient(135deg,#00ffcc,#00ccff);color:#0a0e1a;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;">NEW</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('templates',this)">
+            <i class="fas fa-file-alt"></i> Resume Templates
+            <span style="margin-left:auto;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;">NEW</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('interview',this)"><i class="fas fa-comments"></i> Interview Prep</div>
+        <div class="nav-item" onclick="switchTab('jobs',this)">
+            <i class="fas fa-search-dollar"></i> Job Listings
+            <span style="margin-left:auto;background:linear-gradient(135deg,#ffd700,#ff9900);color:#0a0e1a;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;">NEW</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('portfolio',this)"><i class="fas fa-globe"></i> Portfolio Generator</div>
+        <div class="nav-label">Account</div>
+        <div class="nav-item" onclick="switchTab('profile',this)"><i class="fas fa-user-circle"></i> My Profile</div>
+        <div class="nav-item" onclick="switchTab('history',this)"><i class="fas fa-history"></i> Resume History</div>
+        <div class="nav-item" onclick="switchTab('result',this)" id="resultNavItem">
+            <i class="fas fa-clipboard-list"></i> Analysis Result
+            <span class="nav-badge" id="resultBadge">New</span>
+        </div>
+    </nav>
+    <div class="sidebar-bottom">
+        <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+    <div class="topbar">
+        <div class="topbar-title">AI Career <span>Dashboard</span></div>
+        <div class="topbar-right">
+            <div class="score-mini">
+                <span style="color:var(--text2);font-size:11px;">ATS Score</span>
+                <span class="sv" id="miniScore">—</span>
+                <span style="color:var(--text2);font-size:11px;">/100</span>
+            </div>
+            <div class="theme-toggle" onclick="toggleTheme()" id="themeBtn"><i class="fas fa-moon"></i></div>
+        </div>
+    </div>
+
+    <div class="content">
+        <svg width="0" height="0">
+            <defs>
+                <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#00ffcc"/>
+                    <stop offset="100%" style="stop-color:#00ccff"/>
+                </linearGradient>
+            </defs>
+        </svg>
+
+        <!-- ANALYZE -->
+        <div class="tab-panel active" id="tab-analyze">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-file-alt"></i> Resume Analyzer</div>
+                <textarea id="resumeText" placeholder="Paste your complete resume text here...&#10;&#10;Include: Name, Skills, Experience, Projects, Education"></textarea>
+                <button class="btn" onclick="analyze()"><i class="fas fa-search"></i> Analyze Resume</button>
+            </div>
+        </div>
+
+        <!-- PDF -->
+        <div class="tab-panel" id="tab-pdf">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-file-pdf"></i> Upload PDF Resume</div>
+                <label class="file-upload" for="resumeFile">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p><span>Click to upload</span> or drag & drop</p>
+                    <p style="margin-top:5px;font-size:11px;">PDF files only</p>
+                    <p id="fileName" style="margin-top:8px;color:var(--primary);font-size:12px;font-weight:600;"></p>
+                </label>
+                <input type="file" id="resumeFile" accept=".pdf" onchange="updateFileName(this)">
+                <button class="btn" onclick="analyzePDF()"><i class="fas fa-bolt"></i> Analyze PDF</button>
+            </div>
+        </div>
+
+        <!-- MATCH -->
+        <div class="tab-panel" id="tab-match">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-briefcase"></i> Job Match</div>
+                <textarea id="jobDesc" placeholder="Paste the job description here..."></textarea>
+                <button class="btn" onclick="matchJob()"><i class="fas fa-percentage"></i> Match with Resume</button>
+            </div>
+        </div>
+
+        <!-- COVER -->
+        <div class="tab-panel" id="tab-cover">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-envelope"></i> Cover Letter Generator</div>
+                <p style="font-size:13px;color:var(--text2);margin-bottom:15px;">Generate personalized cover letter using your resume + job description.</p>
+                <textarea id="jobDescCover" placeholder="Paste job description here..."></textarea>
+                <button class="btn btn-purple" onclick="generateCoverLetter()"><i class="fas fa-magic"></i> Generate Cover Letter</button>
+            </div>
+        </div>
+
+        <!-- AI CHAT -->
+        <div class="tab-panel" id="tab-chat">
+            <div class="card chat-wrapper">
+                <div class="card-title"><i class="fas fa-robot"></i> AI Career Assistant <span style="margin-left:auto;font-size:11px;color:var(--text2);"><span style="color:#00ff96;">●</span> Online</span></div>
+                <div class="chat-suggestions" id="chatSuggestions">
+                    <span class="suggestion-chip" onclick="sendSuggestion(this)">💼 Resume improve कसं करायचं?</span>
+                    <span class="suggestion-chip" onclick="sendSuggestion(this)">🎯 Java interview tips</span>
+                    <span class="suggestion-chip" onclick="sendSuggestion(this)">💰 Salary negotiation tips</span>
+                    <span class="suggestion-chip" onclick="sendSuggestion(this)">🚀 Career roadmap for developer</span>
+                    <span class="suggestion-chip" onclick="sendSuggestion(this)">📝 Cover letter tips</span>
+                    <span class="suggestion-chip" onclick="sendSuggestion(this)">🔍 How to find jobs faster?</span>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-bubble">
+                        <div class="bubble-avatar ai"><i class="fas fa-robot"></i></div>
+                        <div><div class="bubble-content ai">नमस्ते! 👋 मी तुमचा AI Career Assistant आहे.<br><br>मी help करू शकतो:<br>• Resume improvement<br>• Interview preparation<br>• Career advice<br>• Job search strategies<br><br>काय जाणून घ्यायचं?</div><div class="bubble-time">Just now</div></div>
+                    </div>
+                </div>
+                <div class="chat-input-wrap">
+                    <textarea class="chat-input" id="chatInput" placeholder="Ask me anything about your career..." onkeypress="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+                    <button class="chat-send-btn" onclick="sendChat()"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEMPLATES -->
+        <div class="tab-panel" id="tab-templates">
+            <div id="templateStep1">
+                <div class="card" style="margin-bottom:20px;">
+                    <div class="card-title"><i class="fas fa-palette"></i> Choose Template Style</div>
+                    <p style="font-size:13px;color:var(--text2);margin-bottom:20px;">Select a template design for your resume</p>
+                    <div class="templates-grid">
+                        <div class="template-card selected" id="tcard-modern" onclick="selectTemplate('modern')"><div class="selected-check"><i class="fas fa-check"></i></div><div class="template-badge" style="background:rgba(0,255,200,0.15);color:#00ffcc;">Popular</div><div class="template-preview" style="background:linear-gradient(135deg,#0a0e1a,#0f1628);"><div class="t-lines"><div class="t-line title" style="background:#00ffcc;"></div><div class="t-line xs" style="background:rgba(0,255,200,0.4);"></div><div style="height:8px;"></div><div class="t-line" style="background:rgba(255,255,255,0.1);"></div></div></div><div class="template-info"><div class="template-name">Modern Dark</div><div class="template-desc">Neon glow dark theme</div></div></div>
+                        <div class="template-card" id="tcard-professional" onclick="selectTemplate('professional')"><div class="selected-check"><i class="fas fa-check"></i></div><div class="template-badge" style="background:rgba(37,99,235,0.15);color:#60a5fa;">Clean</div><div class="template-preview" style="background:linear-gradient(135deg,#1e3a5f,#1e40af);"><div class="t-lines"><div class="t-line title" style="background:#60a5fa;"></div><div class="t-line xs" style="background:rgba(96,165,250,0.4);"></div><div style="height:8px;"></div><div class="t-line" style="background:rgba(255,255,255,0.15);"></div></div></div><div class="template-info"><div class="template-name">Professional Blue</div><div class="template-desc">Corporate clean design</div></div></div>
+                        <div class="template-card" id="tcard-creative" onclick="selectTemplate('creative')"><div class="selected-check"><i class="fas fa-check"></i></div><div class="template-badge" style="background:rgba(167,139,250,0.15);color:#a78bfa;">Creative</div><div class="template-preview" style="background:linear-gradient(135deg,#1a0a2e,#2d1b69);"><div class="t-lines"><div class="t-line title" style="background:#a78bfa;"></div><div class="t-line xs" style="background:rgba(167,139,250,0.4);"></div><div style="height:8px;"></div><div class="t-line" style="background:rgba(255,255,255,0.1);"></div></div></div><div class="template-info"><div class="template-name">Creative Purple</div><div class="template-desc">Bold creative design</div></div></div>
+                        <div class="template-card" id="tcard-minimal" onclick="selectTemplate('minimal')"><div class="selected-check"><i class="fas fa-check"></i></div><div class="template-badge" style="background:rgba(255,255,255,0.1);color:#aaa;">Minimal</div><div class="template-preview" style="background:linear-gradient(135deg,#1a1a1a,#2a2a2a);"><div class="t-lines"><div class="t-line title" style="background:#ffffff;"></div><div class="t-line xs" style="background:rgba(255,255,255,0.3);"></div><div style="height:8px;"></div><div class="t-line" style="background:rgba(255,255,255,0.1);"></div></div></div><div class="template-info"><div class="template-name">Minimal Black</div><div class="template-desc">Ultra clean minimal</div></div></div>
+                        <div class="template-card" id="tcard-executive" onclick="selectTemplate('executive')"><div class="selected-check"><i class="fas fa-check"></i></div><div class="template-badge" style="background:rgba(255,215,0,0.15);color:#ffd700;">Premium</div><div class="template-preview" style="background:linear-gradient(135deg,#0f0f0f,#1a1a0a);"><div class="t-lines"><div class="t-line title" style="background:#ffd700;"></div><div class="t-line xs" style="background:rgba(255,215,0,0.4);"></div><div style="height:8px;"></div><div class="t-line" style="background:rgba(255,255,255,0.1);"></div></div></div><div class="template-info"><div class="template-name">Executive Gold</div><div class="template-desc">Premium gold theme</div></div></div>
+                        <div class="template-card" id="tcard-green" onclick="selectTemplate('green')"><div class="selected-check"><i class="fas fa-check"></i></div><div class="template-badge" style="background:rgba(0,255,100,0.15);color:#00ff64;">Fresh</div><div class="template-preview" style="background:linear-gradient(135deg,#0a1a0a,#0f2d0f);"><div class="t-lines"><div class="t-line title" style="background:#00ff64;"></div><div class="t-line xs" style="background:rgba(0,255,100,0.4);"></div><div style="height:8px;"></div><div class="t-line" style="background:rgba(255,255,255,0.1);"></div></div></div><div class="template-info"><div class="template-name">Fresh Green</div><div class="template-desc">Nature inspired design</div></div></div>
+                    </div>
+                    <button class="btn" onclick="goToTemplateForm()" style="width:auto;padding:12px 30px;"><i class="fas fa-arrow-right"></i> Continue</button>
+                </div>
+            </div>
+            <div id="templateStep2" style="display:none;">
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-edit"></i> Fill Your Details <button onclick="goBackToTemplates()" style="margin-left:auto;background:var(--card);border:1px solid var(--border);color:var(--text2);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Poppins',sans-serif;"><i class="fas fa-arrow-left"></i> Back</button></div>
+                    <div class="form-grid">
+                        <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" id="tf-name" placeholder="Saurabh Pal"></div>
+                        <div class="form-group"><label class="form-label">Job Title *</label><input class="form-input" id="tf-title" placeholder="Full Stack Developer"></div>
+                        <div class="form-group"><label class="form-label">Email *</label><input class="form-input" id="tf-email" placeholder="saurabh@example.com" type="email"></div>
+                        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="tf-phone" placeholder="+91 9876543210"></div>
+                        <div class="form-group"><label class="form-label">Location</label><input class="form-input" id="tf-location" placeholder="Pune, Maharashtra"></div>
+                        <div class="form-group"><label class="form-label">LinkedIn</label><input class="form-input" id="tf-linkedin" placeholder="linkedin.com/in/saurabhpal"></div>
+                        <div class="form-group"><label class="form-label">GitHub</label><input class="form-input" id="tf-github" placeholder="github.com/saurabhpal"></div>
+                        <div class="form-group"><label class="form-label">Portfolio</label><input class="form-input" id="tf-portfolio" placeholder="saurabhpal.netlify.app"></div>
+                    </div>
+                    <div style="margin-bottom:15px;"><label class="form-label">Professional Summary *</label><textarea class="form-textarea" id="tf-summary" placeholder="Passionate Full Stack Java Developer..."></textarea></div>
+                    <div style="margin-bottom:15px;"><label class="form-label">Technical Skills *</label><textarea class="form-textarea" id="tf-skills" placeholder="Languages: Java, JavaScript&#10;Frameworks: Spring Boot, React"></textarea></div>
+                    <div style="margin-bottom:15px;"><label class="form-label">Work Experience</label><textarea class="form-textarea" id="tf-experience" placeholder="Company: TechCorp (2022-Present)&#10;Role: Java Developer"></textarea></div>
+                    <div style="margin-bottom:15px;"><label class="form-label">Projects</label><textarea class="form-textarea" id="tf-projects" placeholder="Project: AI Career Assistant&#10;Tech: Spring Boot, React, AI"></textarea></div>
+                    <div style="margin-bottom:20px;"><label class="form-label">Education</label><textarea class="form-textarea" id="tf-education" placeholder="B.E. Computer Engineering - Pune University (2022)"></textarea></div>
+                    <button class="btn" onclick="generateFromTemplate()"><i class="fas fa-magic"></i> Generate Resume</button>
+                </div>
+            </div>
+            <div id="templateStep3" style="display:none;">
+                <div class="card" style="margin-bottom:15px;">
+                    <div class="card-title"><i class="fas fa-eye"></i> Resume Preview
+                        <div style="margin-left:auto;display:flex;gap:10px;">
+                            <button onclick="goBackToForm()" style="background:var(--card);border:1px solid var(--border);color:var(--text2);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Poppins',sans-serif;"><i class="fas fa-arrow-left"></i> Edit</button>
+                            <button onclick="openTemplateFullscreen()" style="background:rgba(0,255,200,0.1);border:1px solid rgba(0,255,200,0.25);color:var(--primary);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Poppins',sans-serif;"><i class="fas fa-external-link-alt"></i> Fullscreen</button>
+                            <button onclick="downloadTemplate()" style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.25);color:#a78bfa;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Poppins',sans-serif;"><i class="fas fa-download"></i> Download</button>
+                        </div>
+                    </div>
+                    <iframe id="templatePreview" class="template-result-preview"></iframe>
+                </div>
+            </div>
+            <div class="loading-state" id="templateLoading" style="display:none;"><i class="fas fa-spinner fa-spin"></i><p style="font-size:13px;">Generating your resume...</p></div>
+        </div>
+
+        <!-- INTERVIEW -->
+        <div class="tab-panel" id="tab-interview">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-comments"></i> Interview Question Generator</div>
+                <p style="font-size:13px;color:var(--text2);margin-bottom:18px;">AI generates 10 technical interview questions for your role.</p>
+                <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:8px;"><i class="fas fa-briefcase" style="color:var(--primary);margin-right:5px;"></i> Job Role</label>
+                <div style="position:relative;margin-bottom:15px;">
+                    <i class="fas fa-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#444;font-size:13px;"></i>
+                    <input type="text" id="roleInput" placeholder="e.g. Java Developer..." onkeypress="if(event.key==='Enter') generateInterview()" style="width:100%;padding:13px 14px 13px 42px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:11px;color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;outline:none;">
+                </div>
+                <div style="margin-bottom:18px;">
+                    <span class="role-chip" onclick="setRole('Java Developer')" style="background:rgba(0,255,200,0.08);border:1px solid rgba(0,255,200,0.2);color:var(--primary);">Java Dev</span>
+                    <span class="role-chip" onclick="setRole('Spring Boot Developer')" style="background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.2);color:#00ccff;">Spring Boot</span>
+                    <span class="role-chip" onclick="setRole('React Developer')" style="background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.2);color:#a78bfa;">React Dev</span>
+                    <span class="role-chip" onclick="setRole('Full Stack Developer')" style="background:rgba(255,200,0,0.08);border:1px solid rgba(255,200,0,0.2);color:#ffd700;">Full Stack</span>
+                    <span class="role-chip" onclick="setRole('Data Scientist')" style="background:rgba(0,255,150,0.08);border:1px solid rgba(0,255,150,0.2);color:#00ff96;">Data Science</span>
+                    <span class="role-chip" onclick="setRole('DevOps Engineer')" style="background:rgba(255,80,80,0.08);border:1px solid rgba(255,80,80,0.2);color:#ff6b6b;">DevOps</span>
+                </div>
+                <button class="btn" onclick="generateInterview()"><i class="fas fa-magic"></i> Generate 10 Questions</button>
+            </div>
+            <div class="loading-state" id="interviewLoading" style="display:none;"><i class="fas fa-spinner fa-spin"></i><p style="font-size:13px;">Generating questions...</p></div>
+            <div id="interviewResult" style="display:none;margin-top:20px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;">
+                    <div style="font-size:14px;font-weight:600;"><i class="fas fa-list" style="color:var(--primary);margin-right:8px;"></i>Interview Questions</div>
+                    <button class="btn btn-outline" onclick="copyQuestions()"><i class="fas fa-copy"></i> Copy All</button>
+                </div>
+                <div id="questionsList"></div>
+            </div>
+        </div>
+
+        <!-- JOB LISTINGS -->
+        <div class="tab-panel" id="tab-jobs">
+            <div class="card" style="margin-bottom:20px;">
+                <div class="card-title"><i class="fas fa-search-dollar"></i> Job Listings</div>
+                <p style="font-size:13px;color:var(--text2);margin-bottom:18px;">Search real job opportunities matching your skills.</p>
+
+                <!-- Quick Role Chips -->
+                <div class="job-quick-chips">
+                    <span class="job-quick-chip" onclick="quickJobSearch('Java Developer')">☕ Java Developer</span>
+                    <span class="job-quick-chip" onclick="quickJobSearch('Spring Boot Developer')">🍃 Spring Boot</span>
+                    <span class="job-quick-chip" onclick="quickJobSearch('React Developer')">⚛️ React Dev</span>
+                    <span class="job-quick-chip" onclick="quickJobSearch('Full Stack Developer')">🚀 Full Stack</span>
+                    <span class="job-quick-chip" onclick="quickJobSearch('Data Scientist')">📊 Data Science</span>
+                    <span class="job-quick-chip" onclick="quickJobSearch('DevOps Engineer')">⚙️ DevOps</span>
+                    <span class="job-quick-chip" onclick="quickJobSearch('Python Developer')">🐍 Python</span>
+                    <span class="job-quick-chip" onclick="quickJobSearch('Android Developer')">📱 Android</span>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="job-search-bar">
+                    <div style="position:relative;flex:2;min-width:200px;">
+                        <i class="fas fa-briefcase" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#444;font-size:13px;"></i>
+                        <input class="job-search-input" id="jobSearchRole" placeholder="Job role (e.g. Java Developer)" style="padding-left:42px;" onkeypress="if(event.key==='Enter')searchJobs()">
+                    </div>
+                    <div style="position:relative;flex:1;min-width:150px;">
+                        <i class="fas fa-map-marker-alt" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#444;font-size:13px;"></i>
+                        <input class="job-search-input" id="jobSearchLocation" placeholder="Location" style="padding-left:42px;" value="India" onkeypress="if(event.key==='Enter')searchJobs()">
+                    </div>
+                    <button onclick="searchJobs()" style="background:linear-gradient(135deg,var(--primary),var(--secondary));border:none;padding:12px 24px;border-radius:10px;color:#0a0e1a;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:0.3s;white-space:nowrap;">
+                        <i class="fas fa-search"></i> Search Jobs
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div class="loading-state" id="jobsLoading" style="display:none;">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p style="font-size:13px;">Searching jobs...</p>
+            </div>
+
+            <!-- Empty -->
+            <div class="empty-state" id="jobsEmpty">
+                <i class="fas fa-search-dollar"></i>
+                <p>Search for jobs using role and location above</p>
+            </div>
+
+            <!-- Results -->
+            <div id="jobsCount" class="jobs-count" style="display:none;"></div>
+            <div id="jobsList"></div>
+        </div>
+
+        <!-- PORTFOLIO -->
+        <div class="tab-panel" id="tab-portfolio">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-globe"></i> Portfolio Generator</div>
+                <p style="font-size:13px;color:var(--text2);margin-bottom:20px;">Generates a professional portfolio website from your resume.</p>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:20px;">
+                    <div class="result-card blue" style="text-align:center;padding:18px;"><i class="fas fa-palette" style="color:#00ccff;font-size:20px;margin-bottom:8px;display:block;"></i><div style="font-size:12px;font-weight:600;">Dark Theme</div></div>
+                    <div class="result-card green" style="text-align:center;padding:18px;"><i class="fas fa-mobile-alt" style="color:#00ff96;font-size:20px;margin-bottom:8px;display:block;"></i><div style="font-size:12px;font-weight:600;">Responsive</div></div>
+                    <div class="result-card purple" style="text-align:center;padding:18px;"><i class="fas fa-download" style="color:#a78bfa;font-size:20px;margin-bottom:8px;display:block;"></i><div style="font-size:12px;font-weight:600;">Downloadable</div></div>
+                </div>
+                <button class="btn" onclick="generatePortfolio()"><i class="fas fa-magic"></i> Generate Portfolio</button>
+                <div id="previewWrapper" style="display:none;">
+                    <div class="preview-actions">
+                        <button class="preview-action-btn open" onclick="openFullscreen()"><i class="fas fa-external-link-alt"></i> Open Fullscreen</button>
+                        <button class="preview-action-btn download" onclick="downloadPortfolio()"><i class="fas fa-download"></i> Download HTML</button>
+                    </div>
+                    <iframe id="preview" class="portfolio-preview"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROFILE -->
+        <div class="tab-panel" id="tab-profile">
+            <div class="profile-hero">
+                <div class="profile-avatar-big" id="profileAvatarBig">
+                    <span id="profileInitial">U</span>
+                    <div class="verified-ring"><i class="fab fa-github"></i></div>
+                </div>
+                <div class="profile-hero-info">
+                    <div class="profile-hero-name" id="profileName">Loading...</div>
+                    <div class="profile-hero-email" id="profileEmail">loading@example.com</div>
+                    <div class="profile-hero-badges">
+                        <span class="badge member"><i class="fas fa-star"></i> AI Career Member</span>
+                        <span class="badge github" id="profileGithubBadge" style="display:none;"><i class="fab fa-github"></i> GitHub Connected</span>
+                        <span class="badge verified" id="profileVerifiedBadge" style="display:none;"><i class="fas fa-check-circle"></i> Verified</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box"><span class="stat-icon">📊</span><span class="stat-value" id="statTotal">0</span><span class="stat-label">Total Analyses</span></div>
+                <div class="stat-box"><span class="stat-icon">⭐</span><span class="stat-value" id="statAvg">0</span><span class="stat-label">Average Score</span></div>
+                <div class="stat-box"><span class="stat-icon">🏆</span><span class="stat-value" id="statBest">0</span><span class="stat-label">Best Score</span></div>
+                <div class="stat-box"><span class="stat-icon">📄</span><span class="stat-value" id="statPdf">0</span><span class="stat-label">PDF Analyses</span></div>
+            </div>
+            <div class="profile-edit-card">
+                <div class="card-title"><i class="fas fa-edit"></i> Edit Profile</div>
+                <div style="margin-bottom:16px;"><label class="form-label"><i class="fas fa-user" style="color:var(--primary);margin-right:5px;"></i>Full Name</label><input class="profile-input" id="editName" placeholder="Your full name"></div>
+                <div style="margin-bottom:16px;"><label class="form-label"><i class="fas fa-envelope" style="color:var(--primary);margin-right:5px;"></i>Email</label><input class="profile-input" id="editEmail" placeholder="Email" disabled style="opacity:0.5;cursor:not-allowed;"><p style="font-size:11px;color:var(--text2);margin-top:5px;"><i class="fas fa-info-circle"></i> Email cannot be changed</p></div>
+                <div style="margin-bottom:20px;"><label class="form-label"><i class="fab fa-github" style="color:var(--primary);margin-right:5px;"></i>GitHub Status</label><div id="githubStatusBox" style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--text2);">Checking...</div></div>
+                <button class="btn" onclick="updateProfile()" style="width:auto;padding:12px 30px;"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+        </div>
+
+        <!-- HISTORY -->
+        <div class="tab-panel" id="tab-history">
+            <div class="card" style="margin-bottom:20px;">
+                <div class="card-title"><i class="fas fa-history"></i> Resume Analysis History <button onclick="loadHistory()" style="margin-left:auto;background:var(--card);border:1px solid var(--border);color:var(--text2);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Poppins',sans-serif;"><i class="fas fa-sync"></i> Refresh</button></div>
+                <p style="font-size:13px;color:var(--text2);">All your past resume analyses — automatically saved.</p>
+            </div>
+            <div class="loading-state" id="historyLoading" style="display:none;"><i class="fas fa-spinner fa-spin"></i><p style="font-size:13px;">Loading history...</p></div>
+            <div class="empty-state" id="historyEmpty" style="display:none;"><i class="fas fa-history"></i><p>No history yet — Analyze a resume first!</p></div>
+            <div id="historyList"></div>
+        </div>
+
+        <!-- RESULT -->
+        <div class="tab-panel" id="tab-result">
+            <div class="empty-state" id="emptyResult"><i class="fas fa-robot"></i><p>Analyze a resume to see results here</p></div>
+            <div class="loading-state" id="loadingResult" style="display:none;"><i class="fas fa-spinner fa-spin"></i><p id="loadingMsg" style="font-size:13px;">Processing...</p></div>
+            <div id="parsedResult" style="display:none;">
+                <div class="score-section">
+                    <div class="score-ring"><svg viewBox="0 0 100 100"><circle class="bg-circle" cx="50" cy="50" r="45"/><circle class="progress-circle" id="scoreCircle" cx="50" cy="50" r="45"/></svg><div class="score-label" id="scoreRingNum">0</div></div>
+                    <div class="score-info"><div class="score-title" id="scoreTitleText">—</div><div class="score-sub" id="scoreSubText">Analyze resume to get score</div><div class="score-bar-bg"><div class="score-bar-fill" id="scoreBarFill"></div></div></div>
+                </div>
+                <div class="result-grid">
+                    <div class="result-card green"><div class="result-card-title" style="color:#00ff96;"><i class="fas fa-check-circle"></i> Strengths</div><div id="strengthsList"></div></div>
+                    <div class="result-card red"><div class="result-card-title" style="color:#ff6b6b;"><i class="fas fa-times-circle"></i> Weaknesses</div><div id="weaknessesList"></div></div>
+                </div>
+                <div class="result-card yellow" style="margin-bottom:15px;"><div class="result-card-title" style="color:#ffd700;"><i class="fas fa-lightbulb"></i> Improvements</div><div id="improvementsList"></div></div>
+                <div class="result-card purple" style="margin-bottom:15px;"><div class="result-card-title" style="color:#a78bfa;"><i class="fas fa-tags"></i> Missing Keywords</div><div id="keywordsList"></div></div>
+                <div class="result-card blue" id="summaryCard"><div class="result-card-title" style="color:#00ccff;"><i class="fas fa-align-left"></i> Summary</div><div id="summaryText" style="font-size:13px;color:#aaa;line-height:1.8;"></div></div>
+                <div class="cover-letter-box" id="coverCard" style="display:none;">
+                    <div class="result-card-title" style="color:#a78bfa;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:15px;"><i class="fas fa-envelope-open-text"></i> Cover Letter</div>
+                    <div class="cover-letter-text" id="coverLetterText"></div>
+                    <button class="copy-btn" onclick="copyCoverLetter()"><i class="fas fa-copy"></i> Copy Cover Letter</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- HISTORY MODAL -->
+<div class="modal-overlay" id="historyModal">
+    <div class="modal-box">
+        <div class="modal-header"><div class="modal-title"><i class="fas fa-clipboard-list" style="color:var(--primary);margin-right:8px;"></i>Analysis Detail</div><button class="modal-close" onclick="closeHistoryModal()"><i class="fas fa-times"></i> Close</button></div>
+        <div class="modal-content" id="historyModalContent"></div>
+        <button class="btn" onclick="useHistoryResume()" style="margin-top:20px;width:auto;padding:10px 24px;"><i class="fas fa-redo"></i> Use This Resume Again</button>
+    </div>
+</div>
+
+<script>
+let globalResume="",generatedPortfolioHTML="",selectedTemplate="modern",generatedTemplateHTML="",currentHistoryResume="";
+
+window.onload=async function(){
+    await checkAuth();
+    if(localStorage.getItem("github_verified")==="true") document.getElementById("githubBadge").style.display="inline-block";
+    if(localStorage.getItem("theme")==="light"){document.body.classList.add("light");document.getElementById("themeBtn").innerHTML='<i class="fas fa-sun"></i>';}
+};
+
+async function checkAuth(){const token=localStorage.getItem("token");try{const res=await fetch("/auth/validate",{method:"GET",headers:{"Authorization":"Bearer "+token}});if(res.status!==200){localStorage.removeItem("token");window.location="login.html";}}catch(e){window.location="login.html";}}
+function logout(){localStorage.removeItem("token");localStorage.removeItem("github_verified");window.location="login.html";}
+function getHeaders(json=true){const token=localStorage.getItem("token");return json?{"Content-Type":"application/json","Authorization":"Bearer "+token}:{"Authorization":"Bearer "+token};}
+function handleResponse(res){if(res.status===401||res.status===403){showToast("❌ Session expired");localStorage.removeItem("token");window.location="login.html";throw new Error("Unauthorized");}return res;}
+function toggleTheme(){document.body.classList.toggle("light");const isLight=document.body.classList.contains("light");document.getElementById("themeBtn").innerHTML=isLight?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';localStorage.setItem("theme",isLight?"light":"dark");}
+
+function switchTab(name,el){
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.getElementById('tab-'+name).classList.add('active');
+    if(el) el.classList.add('active');
+    if(name==='history') loadHistory();
+    if(name==='profile') loadProfile();
+}
+
+function updateFileName(input){document.getElementById("fileName").innerText=input.files[0]?.name?"📄 "+input.files[0].name:"";}
+function showToast(msg,color="var(--primary)"){const t=document.createElement("div");t.className="toast";t.style.color=color;t.style.borderColor=color+"44";t.innerHTML=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
+function showLoading(msg){switchTab('result',document.getElementById('resultNavItem'));document.getElementById("emptyResult").style.display="none";document.getElementById("parsedResult").style.display="none";document.getElementById("loadingResult").style.display="block";document.getElementById("loadingMsg").innerText=msg;}
+
+function setScore(score){
+    document.getElementById("miniScore").innerText=score;document.getElementById("scoreRingNum").innerText=score;document.getElementById("scoreBarFill").style.width=score+"%";
+    const circumference=2*Math.PI*45;document.getElementById("scoreCircle").style.strokeDashoffset=circumference-(score/100)*circumference;
+    if(score>=80){document.getElementById("scoreTitleText").innerText="🔥 Excellent Resume";document.getElementById("scoreSubText").innerText="ATS Ready";}
+    else if(score>=60){document.getElementById("scoreTitleText").innerText="⚡ Good Resume";document.getElementById("scoreSubText").innerText="Minor improvements needed";}
+    else{document.getElementById("scoreTitleText").innerText="⚠️ Needs Improvement";document.getElementById("scoreSubText").innerText="Follow suggestions below";}
+}
+
+function parseAndShow(data,type="analyze"){
+    document.getElementById("loadingResult").style.display="none";document.getElementById("emptyResult").style.display="none";document.getElementById("parsedResult").style.display="block";document.getElementById("summaryCard").style.display="block";document.getElementById("coverCard").style.display="none";document.getElementById("resultBadge").style.display="inline";
+    const m=data.match(/(\d{1,3})\s*\/\s*100/);const score=m?parseInt(m[1]):0;
+    if(score>0) setScore(score);else{document.getElementById("scoreTitleText").innerText=type==="match"?"📊 Job Match":"📄 Analysis";document.getElementById("scoreSubText").innerText="Review sections below";document.getElementById("miniScore").innerText="—";}
+    const sl=document.getElementById("strengthsList");sl.innerHTML="";[...data.matchAll(/✔\s*(.+)/g)].forEach(m=>{sl.innerHTML+=`<div class="item-row"><span class="icon" style="color:#00ff96;"><i class="fas fa-check-circle"></i></span><span>${m[1].trim()}</span></div>`;});if(!sl.innerHTML){extractSection(data,["Strength","Matched"]).forEach(l=>{sl.innerHTML+=`<div class="item-row"><span class="icon" style="color:#00ff96;"><i class="fas fa-check-circle"></i></span><span>${l}</span></div>`;});}if(!sl.innerHTML)sl.innerHTML=`<div style="color:var(--text2);font-size:12px;">None found</div>`;
+    const wl=document.getElementById("weaknessesList");wl.innerHTML="";[...data.matchAll(/✖\s*(.+)/g)].forEach(m=>{wl.innerHTML+=`<div class="item-row"><span class="icon" style="color:#ff6b6b;"><i class="fas fa-times-circle"></i></span><span>${m[1].trim()}</span></div>`;});if(!wl.innerHTML){extractSection(data,["Weakness","Missing Skill"]).forEach(l=>{wl.innerHTML+=`<div class="item-row"><span class="icon" style="color:#ff6b6b;"><i class="fas fa-times-circle"></i></span><span>${l}</span></div>`;});}if(!wl.innerHTML)wl.innerHTML=`<div style="color:var(--text2);font-size:12px;">None found</div>`;
+    const il=document.getElementById("improvementsList");il.innerHTML="";[...data.matchAll(/👉\s*(.+)/g)].forEach(m=>{il.innerHTML+=`<div class="item-row"><span class="icon" style="color:#ffd700;"><i class="fas fa-arrow-right"></i></span><span>${m[1].trim()}</span></div>`;});if(!il.innerHTML){extractSection(data,["Improve","Suggestion"]).forEach(l=>{il.innerHTML+=`<div class="item-row"><span class="icon" style="color:#ffd700;"><i class="fas fa-arrow-right"></i></span><span>${l}</span></div>`;});}if(!il.innerHTML)il.innerHTML=`<div style="color:var(--text2);font-size:12px;">None found</div>`;
+    const kl=document.getElementById("keywordsList");kl.innerHTML="";extractSection(data,["Missing Keyword","Keyword"]).forEach(k=>{const c=k.replace(/^[-*•]\s*/,"").trim();if(c)kl.innerHTML+=`<span class="chip">${c}</span>`;});if(!kl.innerHTML)kl.innerHTML=`<span style="color:var(--text2);font-size:12px;">No missing keywords</span>`;
+    const sum=extractSection(data,["Summary"]);document.getElementById("summaryText").innerText=sum.join(" ")||"Analysis complete.";
+}
+
+function showCoverLetter(data){
+    document.getElementById("loadingResult").style.display="none";document.getElementById("emptyResult").style.display="none";document.getElementById("parsedResult").style.display="block";document.getElementById("summaryCard").style.display="none";document.getElementById("coverCard").style.display="block";document.getElementById("resultBadge").style.display="inline";
+    document.getElementById("scoreTitleText").innerText="✉️ Cover Letter Ready";document.getElementById("scoreSubText").innerText="Professional & personalized";document.getElementById("scoreRingNum").innerText="✉";document.getElementById("scoreCircle").style.strokeDashoffset=0;
+    document.getElementById("coverLetterText").innerText=data.replace(/COVER_START/g,"").replace(/COVER_END/g,"").trim();
+    document.getElementById("strengthsList").innerHTML=`<div style="color:var(--text2);font-size:12px;">See cover letter →</div>`;document.getElementById("weaknessesList").innerHTML=`<div style="color:var(--text2);font-size:12px;">See cover letter →</div>`;document.getElementById("improvementsList").innerHTML=`<div style="color:var(--text2);font-size:12px;">See cover letter →</div>`;document.getElementById("keywordsList").innerHTML=`<span style="color:var(--text2);font-size:12px;">See cover letter →</span>`;
+}
+
+function copyCoverLetter(){navigator.clipboard.writeText(document.getElementById("coverLetterText").innerText).then(()=>showToast("✅ Copied!"));}
+
+function extractSection(data,keywords){const lines=data.split("\n");let capturing=false;const result=[];for(let line of lines){line=line.trim();if(!line)continue;if(keywords.some(k=>line.toLowerCase().includes(k.toLowerCase()))){capturing=true;continue;}if(capturing){if(/^[A-Z][a-zA-Z\s]+:/.test(line)||line.endsWith(":"))break;if(line.length>2)result.push(line.replace(/^[-*•✔✖👉]\s*/,"").trim());if(result.length>=6)break;}}return result;}
+
+function analyze(){const text=document.getElementById("resumeText").value;if(!text.trim()){showToast("⚠️ Enter resume text");return;}globalResume=text;showLoading("Analyzing resume with AI...");fetch("/resume/analyze",{method:"POST",headers:getHeaders(),body:JSON.stringify({resume:text})}).then(handleResponse).then(r=>r.text()).then(d=>{parseAndShow(d,"analyze");showToast("✅ Analysis complete!");}).catch(()=>showToast("❌ Server Error","#ff6b6b"));}
+function analyzePDF(){const file=document.getElementById("resumeFile").files[0];if(!file){showToast("⚠️ Select PDF");return;}const fd=new FormData();fd.append("file",file);showLoading("Reading PDF...");fetch("/resume/analyze-pdf",{method:"POST",headers:getHeaders(false),body:fd}).then(handleResponse).then(r=>r.json()).then(d=>{globalResume=d.resume;parseAndShow(d.result,"analyze");showToast("✅ PDF analyzed!");}).catch(()=>showToast("❌ PDF Error","#ff6b6b"));}
+function matchJob(){const job=document.getElementById("jobDesc").value;if(!globalResume){showToast("⚠️ Analyze resume first");return;}showLoading("Matching...");fetch("/resume/match",{method:"POST",headers:getHeaders(),body:JSON.stringify({resume:globalResume,job:job})}).then(handleResponse).then(r=>r.text()).then(d=>{parseAndShow(d,"match");showToast("✅ Job match done!");});}
+function generateCoverLetter(){const job=document.getElementById("jobDescCover").value;if(!globalResume){showToast("⚠️ Analyze resume first");return;}showLoading("Writing cover letter...");fetch("/resume/cover-letter",{method:"POST",headers:getHeaders(),body:JSON.stringify({resume:globalResume,job:job})}).then(handleResponse).then(r=>r.text()).then(d=>{showCoverLetter(d);showToast("✅ Cover letter ready!");});}
+
+function sendSuggestion(el){document.getElementById("chatInput").value=el.innerText.replace(/^[^\s]+\s/,"");document.getElementById("chatSuggestions").style.display="none";sendChat();}
+async function sendChat(){const input=document.getElementById("chatInput");const message=input.value.trim();if(!message)return;input.value="";addChatBubble(message,"user");showTyping();try{const res=await fetch("/chat/ask",{method:"POST",headers:getHeaders(),body:JSON.stringify({message:message,context:globalResume||""})});const data=await res.text();hideTyping();addChatBubble(data,"ai");}catch(e){hideTyping();addChatBubble("❌ Error","ai");}}
+function addChatBubble(message,type){const messages=document.getElementById("chatMessages");const time=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});const bubble=document.createElement("div");bubble.className=`chat-bubble ${type}`;bubble.innerHTML=`<div class="bubble-avatar ${type}">${type==='ai'?'<i class="fas fa-robot"></i>':'<i class="fas fa-user"></i>'}</div><div><div class="bubble-content ${type}">${message.replace(/\n/g,'<br>')}</div><div class="bubble-time">${time}</div></div>`;messages.appendChild(bubble);messages.scrollTop=messages.scrollHeight;}
+function showTyping(){const messages=document.getElementById("chatMessages");const t=document.createElement("div");t.className="chat-bubble";t.id="typingIndicator";t.innerHTML=`<div class="bubble-avatar ai"><i class="fas fa-robot"></i></div><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;messages.appendChild(t);messages.scrollTop=messages.scrollHeight;}
+function hideTyping(){const t=document.getElementById("typingIndicator");if(t)t.remove();}
+
+function selectTemplate(id){document.querySelectorAll('.template-card').forEach(c=>c.classList.remove('selected'));document.getElementById('tcard-'+id).classList.add('selected');selectedTemplate=id;}
+function goToTemplateForm(){document.getElementById("templateStep1").style.display="none";document.getElementById("templateStep2").style.display="block";document.getElementById("templateStep3").style.display="none";}
+function goBackToTemplates(){document.getElementById("templateStep1").style.display="block";document.getElementById("templateStep2").style.display="none";document.getElementById("templateStep3").style.display="none";}
+function goBackToForm(){document.getElementById("templateStep1").style.display="none";document.getElementById("templateStep2").style.display="block";document.getElementById("templateStep3").style.display="none";}
+async function generateFromTemplate(){
+    const name=document.getElementById("tf-name").value.trim();const title=document.getElementById("tf-title").value.trim();const email=document.getElementById("tf-email").value.trim();
+    if(!name||!title||!email){showToast("⚠️ Name, Title, Email required");return;}
+    const userData=`Name: ${name}\nJob Title: ${title}\nEmail: ${email}\nPhone: ${document.getElementById("tf-phone").value}\nLocation: ${document.getElementById("tf-location").value}\nLinkedIn: ${document.getElementById("tf-linkedin").value}\nGitHub: ${document.getElementById("tf-github").value}\nPortfolio: ${document.getElementById("tf-portfolio").value}\n\nSUMMARY:\n${document.getElementById("tf-summary").value}\n\nSKILLS:\n${document.getElementById("tf-skills").value}\n\nEXPERIENCE:\n${document.getElementById("tf-experience").value}\n\nPROJECTS:\n${document.getElementById("tf-projects").value}\n\nEDUCATION:\n${document.getElementById("tf-education").value}`;
+    document.getElementById("templateStep2").style.display="none";document.getElementById("templateLoading").style.display="block";
+    try{const res=await fetch("/template/generate",{method:"POST",headers:getHeaders(),body:JSON.stringify({templateId:selectedTemplate,userData:userData})});const data=await res.text();generatedTemplateHTML=data.replace(/```html/g,"").replace(/```/g,"").trim();const s=generatedTemplateHTML.indexOf("<!DOCTYPE");if(s>0)generatedTemplateHTML=generatedTemplateHTML.substring(s);document.getElementById("templateLoading").style.display="none";document.getElementById("templateStep3").style.display="block";document.getElementById("templatePreview").srcdoc=generatedTemplateHTML;showToast("✅ Resume generated!");}
+    catch(e){document.getElementById("templateLoading").style.display="none";document.getElementById("templateStep2").style.display="block";showToast("❌ Error","#ff6b6b");}
+}
+function openTemplateFullscreen(){if(!generatedTemplateHTML)return;window.open(URL.createObjectURL(new Blob([generatedTemplateHTML],{type:"text/html"})),"_blank");}
+function downloadTemplate(){if(!generatedTemplateHTML)return;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([generatedTemplateHTML],{type:"text/html"}));a.download="my-resume.html";a.click();showToast("✅ Downloaded!");}
+
+function setRole(role){document.getElementById("roleInput").value=role;}
+async function generateInterview(){
+    const role=document.getElementById("roleInput").value.trim();if(!role){showToast("⚠️ Role टाका");return;}
+    document.getElementById("interviewLoading").style.display="block";document.getElementById("interviewResult").style.display="none";
+    try{const res=await fetch("/interview/generate",{method:"POST",headers:getHeaders(),body:JSON.stringify({role:role})});const data=await res.text();document.getElementById("interviewLoading").style.display="none";document.getElementById("interviewResult").style.display="block";const lines=data.split("\n").filter(l=>l.trim().length>5);const ql=document.getElementById("questionsList");ql.innerHTML="";let qNum=1;lines.forEach(line=>{const clean=line.replace(/^\d+[\.\)]\s*/,"").replace(/^\*\*|\*\*$/g,"").trim();if(clean.length>10&&qNum<=10){ql.innerHTML+=`<div class="question-card"><div class="q-num">${qNum}</div><div class="q-text">${clean}</div></div>`;qNum++;}});showToast("✅ Questions ready!");}
+    catch(e){document.getElementById("interviewLoading").style.display="none";showToast("❌ Error","#ff6b6b");}
+}
+function copyQuestions(){const cards=document.querySelectorAll(".q-text");let text="";cards.forEach((c,i)=>{text+=`${i+1}. ${c.innerText}\n`;});navigator.clipboard.writeText(text).then(()=>showToast("✅ Copied!"));}
+
+// JOB LISTINGS
+function quickJobSearch(role){document.getElementById("jobSearchRole").value=role;searchJobs();}
+
+async function searchJobs(){
+    const role=document.getElementById("jobSearchRole").value.trim()||"Java Developer";
+    const location=document.getElementById("jobSearchLocation").value.trim()||"India";
+
+    document.getElementById("jobsLoading").style.display="block";
+    document.getElementById("jobsEmpty").style.display="none";
+    document.getElementById("jobsList").innerHTML="";
+    document.getElementById("jobsCount").style.display="none";
+
+    try{
+        const res=await fetch("/jobs/search",{method:"POST",headers:getHeaders(),body:JSON.stringify({role:role,location:location})});
+        const text=await res.text();
+        const data=JSON.parse(text);
+        document.getElementById("jobsLoading").style.display="none";
+
+        const jobs=data.data||[];
+        if(jobs.length===0){document.getElementById("jobsEmpty").style.display="block";return;}
+
+        document.getElementById("jobsCount").style.display="block";
+        document.getElementById("jobsCount").innerHTML=`Found <span>${jobs.length}</span> jobs for "<span>${role}</span>" in <span>${location}</span>`;
+
+        const list=document.getElementById("jobsList");
+        list.innerHTML="";
+
+        jobs.forEach(job=>{
+            const title=job.job_title||"Job Title";
+            const company=job.employer_name||"Company";
+            const city=job.job_city||job.job_country||"Location";
+            const type=job.job_employment_type||"FULLTIME";
+            const applyLink=job.job_apply_link||"#";
+            const desc=(job.job_description||"Great opportunity to work with cutting-edge technology.").substring(0,200)+"...";
+            const posted=job.job_posted_at_datetime_utc?new Date(job.job_posted_at_datetime_utc).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}):"Recent";
+            const minSalary=job.job_min_salary;const maxSalary=job.job_max_salary;
+            const salaryText=minSalary&&maxSalary?`₹${(minSalary/100000).toFixed(1)}L - ₹${(maxSalary/100000).toFixed(1)}L/yr`:"";
+            const initial=company.charAt(0).toUpperCase();
+            const isRemote=city.toLowerCase().includes("remote");
+
+            list.innerHTML+=`
+                <div class="job-card">
+                    <div class="job-header">
+                        <div class="job-logo">${initial}</div>
+                        <div class="job-info">
+                            <div class="job-title">${title}</div>
+                            <div class="job-company"><i class="fas fa-building" style="margin-right:5px;font-size:11px;"></i>${company}</div>
+                            <div class="job-meta">
+                                <span class="job-meta-item"><i class="fas fa-map-marker-alt"></i>${city}</span>
+                                <span class="job-meta-item"><i class="fas fa-calendar"></i>${posted}</span>
+                                ${salaryText?`<span class="job-meta-item"><i class="fas fa-money-bill-wave"></i>${salaryText}</span>`:''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="job-desc">${desc}</div>
+                    <div class="job-footer">
+                        <div class="job-tags">
+                            <span class="job-tag fulltime">${type==='FULLTIME'?'Full Time':type}</span>
+                            ${isRemote?'<span class="job-tag remote">🏠 Remote</span>':''}
+                            ${salaryText?`<span class="job-tag salary">💰 ${salaryText}</span>`:''}
+                        </div>
+                        <a class="job-apply-btn" href="${applyLink}" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> Apply Now
+                        </a>
+                    </div>
+                </div>`;
+        });
+
+        showToast(`✅ ${jobs.length} jobs found!`);
+    }catch(e){
+        document.getElementById("jobsLoading").style.display="none";
+        document.getElementById("jobsEmpty").style.display="block";
+        showToast("❌ Error searching jobs","#ff6b6b");
+    }
+}
+
+function generatePortfolio(){if(!globalResume){showToast("⚠️ Analyze resume first");return;}showToast("⏳ Generating portfolio...");fetch("/portfolio/generate",{method:"POST",headers:getHeaders(),body:JSON.stringify({resume:globalResume})}).then(handleResponse).then(r=>r.text()).then(d=>{generatedPortfolioHTML=d.replace(/```html/g,"").replace(/```/g,"").trim();const s=generatedPortfolioHTML.indexOf("<!DOCTYPE");if(s>0)generatedPortfolioHTML=generatedPortfolioHTML.substring(s);document.getElementById("preview").srcdoc=generatedPortfolioHTML;document.getElementById("previewWrapper").style.display="block";showToast("✅ Portfolio ready!");});}
+function openFullscreen(){if(!generatedPortfolioHTML)return;window.open(URL.createObjectURL(new Blob([generatedPortfolioHTML],{type:"text/html"})),"_blank");}
+function downloadPortfolio(){if(!generatedPortfolioHTML)return;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([generatedPortfolioHTML],{type:"text/html"}));a.download="my-portfolio.html";a.click();showToast("✅ Downloaded!");}
+
+async function loadProfile(){
+    try{
+        const res=await fetch("/profile/me",{method:"GET",headers:getHeaders()});const data=await res.json();if(data.error)return;
+        const name=data.name||"User";const email=data.email||"";const initial=name.charAt(0).toUpperCase();
+        document.getElementById("profileInitial").innerText=initial;document.getElementById("profileName").innerText=name;document.getElementById("profileEmail").innerText=email;document.getElementById("editName").value=name;document.getElementById("editEmail").value=email;
+        document.getElementById("sidebarAvatar").innerText=initial;document.getElementById("sidebarName").innerText=name;
+        document.getElementById("statTotal").innerText=data.totalAnalyses||0;document.getElementById("statAvg").innerText=data.avgScore||0;document.getElementById("statBest").innerText=data.bestScore||0;document.getElementById("statPdf").innerText=data.pdfAnalyses||0;
+        const isVerified=localStorage.getItem("github_verified")==="true";
+        if(isVerified){document.getElementById("profileAvatarBig").classList.add("verified");document.getElementById("profileGithubBadge").style.display="inline-flex";document.getElementById("profileVerifiedBadge").style.display="inline-flex";document.getElementById("githubStatusBox").innerHTML=`<span style="color:#00ff96;"><i class="fab fa-github"></i> GitHub Connected & Verified ✅</span>`;}
+        else{document.getElementById("githubStatusBox").innerHTML=`<span style="color:#888;"><i class="fab fa-github"></i> Not connected — </span><a href="/oauth2/authorization/github" style="color:var(--primary);text-decoration:none;font-weight:600;">Connect GitHub →</a>`;}
+    }catch(e){showToast("❌ Error loading profile","#ff6b6b");}
+}
+
+async function updateProfile(){
+    const name=document.getElementById("editName").value.trim();if(!name){showToast("⚠️ Name required");return;}
+    try{const res=await fetch("/profile/update",{method:"PUT",headers:getHeaders(),body:JSON.stringify({name:name})});const data=await res.json();
+    if(data.message){showToast("✅ Profile updated!");document.getElementById("profileName").innerText=name;document.getElementById("sidebarAvatar").innerText=name.charAt(0).toUpperCase();document.getElementById("sidebarName").innerText=name;document.getElementById("profileInitial").innerText=name.charAt(0).toUpperCase();}
+    else showToast("❌ "+(data.error||"Error"),"#ff6b6b");}catch(e){showToast("❌ Error","#ff6b6b");}
+}
+
+async function loadHistory(){
+    document.getElementById("historyLoading").style.display="block";document.getElementById("historyEmpty").style.display="none";document.getElementById("historyList").innerHTML="";
+    try{const res=await fetch("/history/all",{method:"GET",headers:getHeaders()});const data=await res.json();document.getElementById("historyLoading").style.display="none";
+    if(!data||data.length===0){document.getElementById("historyEmpty").style.display="block";return;}
+    const list=document.getElementById("historyList");
+    data.forEach(item=>{
+        const score=item.score||0;const color=score>=80?"#00ff96":score>=60?"#ffd700":"#ff6b6b";const bg=score>=80?"rgba(0,255,150,0.1)":score>=60?"rgba(255,200,0,0.1)":"rgba(255,80,80,0.1)";
+        const date=new Date(item.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+        const preview=item.resumeText?item.resumeText.substring(0,70)+"...":"Resume";
+        const typeIcon=item.templateUsed==='pdf'?'fa-file-pdf':'fa-file-alt';
+        list.innerHTML+=`<div class="history-card"><div class="history-score-badge" style="background:${bg};color:${color};">${score>0?score:'<i class="fas fa-'+typeIcon+'"></i>'}</div><div class="history-info"><div class="history-title">${preview}</div><div class="history-meta"><span><i class="fas fa-calendar" style="margin-right:4px;"></i>${date}</span>${score>0?`<span style="color:${color};font-weight:600;">Score: ${score}/100</span>`:''}</div></div><div class="history-actions"><button class="history-btn view" onclick="viewHistory('${encodeResult(item.analysisResult)}','${encodeResult(item.resumeText)}')"><i class="fas fa-eye"></i></button><button class="history-btn delete" onclick="deleteHistory(${item.id})"><i class="fas fa-trash"></i></button></div></div>`;
+    });}catch(e){document.getElementById("historyLoading").style.display="none";showToast("❌ Error","#ff6b6b");}
+}
+
+function encodeResult(str){if(!str)return"";return encodeURIComponent(str.substring(0,500));}
+function viewHistory(encodedResult,encodedResume){currentHistoryResume=decodeURIComponent(encodedResume);document.getElementById("historyModalContent").innerText=decodeURIComponent(encodedResult)||"No result";document.getElementById("historyModal").classList.add("open");}
+function closeHistoryModal(){document.getElementById("historyModal").classList.remove("open");}
+function useHistoryResume(){if(currentHistoryResume){globalResume=currentHistoryResume;document.getElementById("resumeText").value=currentHistoryResume;closeHistoryModal();switchTab('analyze',document.querySelector('.nav-item'));showToast("✅ Resume loaded!");}}
+async function deleteHistory(id){if(!confirm("Delete this history?"))return;try{await fetch("/history/delete/"+id,{method:"DELETE",headers:getHeaders()});showToast("✅ Deleted!");loadHistory();}catch(e){showToast("❌ Error","#ff6b6b");}}
+</script>
+</body>
+</html>

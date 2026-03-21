@@ -1,0 +1,89 @@
+body{
+font-family:Arial;
+background:#111;
+color:white;
+margin:0;
+}
+
+#scoreText{
+font-size:40px;
+color:#00ffcc;
+text-align:center;
+}
+
+.card h3{
+color:#00ccff;
+}
+
+button:hover{
+background:#00ccff;
+}
+
+.card{
+background: rgba(255,255,255,0.05);
+backdrop-filter: blur(10px);
+border-radius: 12px;
+box-shadow: 0 0 20px rgba(0,255,200,0.2);
+}
+
+button{
+background: linear-gradient(45deg,#00ffcc,#00ccff);
+transition: 0.3s;
+}
+
+button:hover{
+transform: scale(1.05);
+}
+
+.header{
+display:flex;
+justify-content:space-between;
+background:#222;
+padding:15px;
+}
+
+.container{
+padding:20px;
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:20px;
+}
+
+.card{
+background:#333;
+padding:20px;
+border-radius:8px;
+}
+
+textarea{
+width:100%;
+height:100px;
+}
+
+button{
+background:blue;
+color:white;
+border:none;
+padding:10px;
+cursor:pointer;
+}
+
+.progress{
+background:#555;
+height:20px;
+margin-top:10px;
+}
+
+.preview{
+width:100%;
+height:500px;   /* 🔥 increase height */
+border:1px solid #555;
+margin-top:10px;
+overflow:auto;  /* 🔥 scroll enable */
+}
+
+.progress-bar{
+height:100%;
+width:0%;
+background:green;
+}
