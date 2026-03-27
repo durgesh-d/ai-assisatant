@@ -7,11 +7,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-public class PdfService {
+public class PdfService
+{
 
-    public String extractText(MultipartFile file) {
+    public String extractText(MultipartFile file) 
+    {
 
-        try {
+        try 
+        {
 
             PDDocument document = PDDocument.load(file.getInputStream());
 
@@ -23,7 +26,9 @@ public class PdfService {
 
             return text;
 
-        } catch (IOException e) {
+        } 
+        catch (IOException e) 
+        {
 
             throw new RuntimeException("Error reading PDF");
 

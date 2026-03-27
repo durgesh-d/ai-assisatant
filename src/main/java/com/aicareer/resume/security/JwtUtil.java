@@ -18,20 +18,24 @@ public class JwtUtil {
     }
     
  // हे method add करा existing JwtUtil.java मध्ये
-    public String getEmailFromToken(String token) {
-        try {
+    public String getEmailFromToken(String token) 
+    {
+        try 
+        {
             return Jwts.parserBuilder()
                     .setSigningKey(getSignKey())
                     .build()
                     .parseClaimsJws(token)
                     .getBody()
                     .getSubject();
-        } catch (Exception e) {
+        } catch (Exception e)
+        {
             return null;
         }
     }
 
-    public String generateToken(String username) {
+    public String generateToken(String username)
+    {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
@@ -40,14 +44,18 @@ public class JwtUtil {
                 .compact();
     }
 
-    public boolean validateToken(String token) {
-        try {
+    public boolean validateToken(String token) 
+    {
+        try
+        {
             Jwts.parserBuilder()
                     .setSigningKey(getSignKey())
                     .build()
                     .parseClaimsJws(token);
             return true;
-        } catch (Exception e) {
+        } 
+        catch (Exception e)
+        {
             return false;
         }
     }

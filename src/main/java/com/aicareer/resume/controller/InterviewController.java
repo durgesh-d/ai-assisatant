@@ -9,15 +9,18 @@ import java.util.Map;
 @RestController
 @RequestMapping("/interview")
 @CrossOrigin("*")
-public class InterviewController {
+public class InterviewController 
+{
 
     @Autowired
     private AIInterviewService service;
 
     @PostMapping("/generate")
-    public String generateQuestions(@RequestBody Map<String, String> body) {
+    public String generateQuestions(@RequestBody Map<String, String> body)
+    {
         String role = body.get("role");
-        if (role == null || role.trim().isEmpty()) {
+        if (role == null || role.trim().isEmpty())
+        {
             return "❌ Role required";
         }
         return service.generateQuestions(role);

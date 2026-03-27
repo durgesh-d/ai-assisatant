@@ -10,12 +10,14 @@ import org.springframework.web.client.RestTemplate;
 import java.util.*;
 
 @Service
-public class AIInterviewService {
+public class AIInterviewService
+{
 
     @Value("${groq.api.key}")
     private String apiKey;
 
-    public String generateQuestions(String role) {
+    public String generateQuestions(String role) 
+    {
 
         String url = "https://api.groq.com/openai/v1/chat/completions";
         RestTemplate restTemplate = new RestTemplate();
@@ -46,7 +48,8 @@ public class AIInterviewService {
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-        try {
+        try 
+        {
             ResponseEntity<String> response =
                     restTemplate.postForEntity(url, request, String.class);
 
@@ -60,7 +63,9 @@ public class AIInterviewService {
                     .get("content")
                     .asText();
 
-        } catch (Exception e) {
+        } 
+        catch (Exception e) 
+        {
             e.printStackTrace();
             return "❌ Error generating questions: " + e.getMessage();
         }

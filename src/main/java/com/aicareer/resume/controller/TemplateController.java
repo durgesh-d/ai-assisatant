@@ -15,11 +15,13 @@ public class TemplateController {
     private AIService aiService;
 
     @PostMapping("/generate")
-    public String generateTemplate(@RequestBody Map<String, String> body) {
+    public String generateTemplate(@RequestBody Map<String, String> body)
+    {
         String templateId = body.getOrDefault("templateId", "modern");
         String userData = body.getOrDefault("userData", "");
 
-        if (userData.trim().isEmpty()) {
+        if (userData.trim().isEmpty()) 
+        {
             return "❌ User data required";
         }
 

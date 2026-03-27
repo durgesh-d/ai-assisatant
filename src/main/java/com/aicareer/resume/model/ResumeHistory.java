@@ -5,7 +5,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "resume_history")
-public class ResumeHistory {
+public class ResumeHistory
+{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,11 +25,12 @@ public class ResumeHistory {
     private LocalDateTime createdAt;
 
     @PrePersist
-    public void prePersist() {
+    public void prePersist()
+    {
         createdAt = LocalDateTime.now();
     }
 
-    // Getters & Setters
+   
     public Long getId() { return id; }
     public String getUserEmail() { return userEmail; }
     public void setUserEmail(String userEmail) { this.userEmail = userEmail; }

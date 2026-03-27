@@ -13,23 +13,26 @@ import com.aicareer.resume.service.PdfService;
 @RestController
 @RequestMapping("/resume")
 @CrossOrigin
-public class ResumeController {
+public class ResumeController
+{
 
     @Autowired private PdfService pdfService;
     @Autowired private AIService aiService;
     @Autowired private ResumeHistoryRepository historyRepository;
     @Autowired private JwtUtil jwtUtil;
 
-    private String getEmail(String header) {
+    private String getEmail(String header)
+    {
         if (header == null || !header.startsWith("Bearer ")) return null;
         return jwtUtil.getEmailFromToken(header.substring(7));
     }
 
-    // 🔥 TEXT ANALYZE — auto save
+    // text analize — auto save
     @PostMapping("/analyze")
     public String analyze(
             @RequestHeader("Authorization") String header,
-            @RequestBody Map<String,String> body) {
+            @RequestBody Map<String,String> body)
+    {
 
         String resume = body.get("resume");
         if(resume == null || resume.isEmpty()) return "❌ Please enter resume";
@@ -55,9 +58,10 @@ public class ResumeController {
         return result;
     }
 
-    // 🔥 JOB MATCH
+    // job match
     @PostMapping("/match")
-    public String match(@RequestBody Map<String,String> body) {
+    public String match(@RequestBody Map<String,String> body) 
+    {
         String resume = body.get("resume");
         String job = body.get("job");
         if(resume == null || job == null) return "❌ Missing input";
@@ -66,20 +70,22 @@ public class ResumeController {
 
     // 🔥 COVER LETTER
     @PostMapping("/cover-letter")
-    public String cover(@RequestBody Map<String,String> body) {
+    public String cover(@RequestBody Map<String,String> body)
+    {
         return aiService.generateCoverLetter(body.get("resume"), body.get("job"));
     }
 
-    // 🔥 PDF ANALYZE — auto save
+    // pdf save ani analize
     @PostMapping("/analyze-pdf")
     public Map<String,String> analyzePDF(
             @RequestHeader("Authorization") String header,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file) 
+    {
         try {
             String text = pdfService.extractText(file);
             String result = aiService.analyzeResume(text);
 
-            // Auto save
+            
             try {
                 String email = getEmail(header);
                 if (email != null) {
@@ -93,10 +99,14 @@ public class ResumeController {
                     if (m.find()) history.setScore(Integer.parseInt(m.group(1)));
                     historyRepository.save(history);
                 }
-            } catch(Exception e) { e.printStackTrace(); }
+                
+            }
+            catch(Exception e) { e.printStackTrace(); }
 
             return Map.of("resume", text, "result", result);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             e.printStackTrace();
             return Map.of("result","Error reading PDF");
         }

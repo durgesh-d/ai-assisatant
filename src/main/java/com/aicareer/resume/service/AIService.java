@@ -7,15 +7,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-public class AIService {
+public class AIService
+{
 
     @Value("${groq.api.key}")
     private String apiKey;
 
     private final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-    // 🔥 ATS RESUME ANALYSIS
-    public String analyzeResume(String resumeText) {
+    // ATS RESUME ANALYSIS
+    public String analyzeResume(String resumeText)
+    {
         if(isInvalid(resumeText)) return "❌ Please provide valid resume text";
 
         String prompt = """
@@ -88,8 +90,9 @@ Rules:
         return callAI(prompt, false);
     }
 
-    // 🔥 PORTFOLIO
-    public String generatePortfolio(String resumeText) {
+    //  PORTFOLIO
+    public String generatePortfolio(String resumeText)
+    {
         if(isInvalid(resumeText)) return "❌ Resume required for portfolio";
 
         String prompt = """
@@ -368,8 +371,9 @@ Keep responses clear and well formatted.
         }
     }
 
-    // 🔁 COMMON METHOD
-    private String callAI(String prompt, boolean isPortfolio) {
+    // COMMON METHOD
+    private String callAI(String prompt, boolean isPortfolio)
+    {
         try {
             JSONObject request = new JSONObject();
 
@@ -405,7 +409,8 @@ Keep responses clear and well formatted.
             String content = json.getJSONArray("choices").getJSONObject(0)
                     .getJSONObject("message").getString("content");
 
-            if(isPortfolio) {
+            if(isPortfolio)
+            {
                 content = content.replaceAll("(?s)```html", "")
                                  .replaceAll("(?s)```", "")
                                  .trim();
@@ -415,20 +420,25 @@ Keep responses clear and well formatted.
 
             return content;
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             e.printStackTrace();
             return "❌ AI Error: " + e.getMessage();
         }
     }
 
-    private boolean isInvalid(String text) {
+    private boolean isInvalid(String text) 
+    {
         return text == null || text.trim().isEmpty();
     }
     
- // 🔥 RESUME TEMPLATE GENERATOR
-    public String generateResumeTemplate(String templateId, String userData) {
+ // RESUME TEMPLATE GENERATOR
+    public String generateResumeTemplate(String templateId, String userData)
+    {
 
-        String styleGuide = switch (templateId) {
+        String styleGuide = switch (templateId) 
+        		{
             case "modern" -> """
                 STYLE: Modern Dark
                 - Background: #0a0e1a

@@ -13,7 +13,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/profile")
 @CrossOrigin("*")
-public class UserProfileController {
+public class UserProfileController
+{
 
     @Autowired private UserRepository userRepository;
     @Autowired private ResumeHistoryRepository historyRepository;
@@ -24,15 +25,17 @@ public class UserProfileController {
         return jwtUtil.getEmailFromToken(header.substring(7));
     }
 
-    // GET profile
+    // profile gate sati
     @GetMapping("/me")
     public Map<String, Object> getProfile(
-            @RequestHeader("Authorization") String header) {
+            @RequestHeader("Authorization") String header)
+    {
 
         String email = getEmail(header);
         Map<String, Object> result = new HashMap<>();
 
-        if (email == null) {
+        if (email == null) 
+        {
             result.put("error", "Unauthorized");
             return result;
         }
@@ -43,7 +46,7 @@ public class UserProfileController {
             return result;
         }
 
-        // User info
+        // User mahiti sati
         result.put("name", user.getName());
         result.put("email", user.getEmail());
         result.put("id", user.getId());
@@ -83,7 +86,8 @@ public class UserProfileController {
     @PutMapping("/update")
     public Map<String, String> updateProfile(
             @RequestHeader("Authorization") String header,
-            @RequestBody Map<String, String> body) {
+            @RequestBody Map<String, String> body)
+    {
 
         String email = getEmail(header);
         Map<String, String> result = new HashMap<>();
@@ -100,12 +104,15 @@ public class UserProfileController {
         }
 
         String newName = body.get("name");
-        if (newName != null && !newName.trim().isEmpty()) {
+        if (newName != null && !newName.trim().isEmpty()) 
+        {
             user.setName(newName.trim());
             userRepository.save(user);
             result.put("message", "Profile updated!");
             result.put("name", newName.trim());
-        } else {
+        }
+        else
+        {
             result.put("error", "Name required");
         }
 

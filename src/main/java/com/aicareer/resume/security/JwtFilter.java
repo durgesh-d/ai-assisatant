@@ -9,7 +9,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-public class JwtFilter extends OncePerRequestFilter {
+public class JwtFilter extends OncePerRequestFilter
+{
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -18,20 +19,23 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                    HttpServletResponse response,
                                    FilterChain filterChain)
-            throws ServletException, IOException {
+            throws ServletException, IOException
+    {
 
         String path = request.getRequestURI();
 
-        // ✅ PUBLIC PATHS
-        if (isPublicPath(path)) {
+       // public path
+        if (isPublicPath(path))
+        {
             filterChain.doFilter(request, response);
             return;
         }
 
         String header = request.getHeader("Authorization");
 
-        // ❌ No Token
-        if (header == null || !header.startsWith("Bearer ")) {
+        // no token
+        if (header == null || !header.startsWith("Bearer "))
+        {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Missing Token");
             return;
@@ -39,38 +43,40 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String token = header.substring(7);
 
-        // ❌ Invalid Token
-        if (!jwtUtil.validateToken(token)) {
+        // Invalid Token
+        if (!jwtUtil.validateToken(token)) 
+        {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Invalid Token");
             return;
         }
 
-        // ✅ Valid Token → Continue
+        // Valid Token → Continue
         filterChain.doFilter(request, response);
     }
 
-    private boolean isPublicPath(String path) {
+    private boolean isPublicPath(String path) 
+    {
         return path.equals("/") ||
 
-               // ✅ HTML PAGES
+               // HTML PAGES
                path.equals("/login.html") ||
                path.equals("/register.html") ||
-               path.equals("/dashboard.html") ||   // ← ADDED
+               path.equals("/dashboard.html") ||  
 
-               // ✅ STATIC FILES
+               // STATIC FILES
                path.startsWith("/css/") ||
                path.startsWith("/js/") ||
                path.startsWith("/images/") ||
 
-               // ✅ AUTH APIs
+               // AUTH APIs
                path.startsWith("/auth/") ||
 
-               // ✅ OAUTH2
+               //  OAUTH2
                path.startsWith("/oauth2/") ||
                path.startsWith("/login/oauth2/") ||
 
-               // ✅ BROWSER EXTRA REQUESTS
+               //  BROWSER EXTRA REQUESTS
                path.contains("favicon");
     }
 }

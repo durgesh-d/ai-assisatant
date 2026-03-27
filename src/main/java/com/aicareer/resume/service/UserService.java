@@ -15,11 +15,11 @@ public class UserService
     private UserRepository repo;
 
     @Autowired
-    private PasswordEncoder encoder; // 🔥 NEW
+    private PasswordEncoder encoder; 
 
     public User register(User user)
     {
-        // 🔥 PASSWORD ENCODE
+        // PASSWORD ENCODE
         user.setPassword(encoder.encode(user.getPassword()));
         return repo.save(user);
     }
@@ -29,7 +29,7 @@ public class UserService
 
         User user = repo.findByEmail(email);
 
-        // 🔥 MATCH ENCODED PASSWORD
+        // MATCH ENCODED PASSWORD
         if(user != null && encoder.matches(password, user.getPassword()))
         {
             return user;

@@ -15,7 +15,8 @@ import com.aicareer.resume.service.PdfService;
 @RestController
 @RequestMapping("/portfolio")
 @CrossOrigin
-public class PortfolioController {
+public class PortfolioController
+{
 
 @Autowired
 PdfService pdfService;
@@ -24,7 +25,8 @@ PdfService pdfService;
 AIService aiService;
 
 @PostMapping("/generate")
-public String generatePortfolio(@RequestBody Map<String,String> body){
+public String generatePortfolio(@RequestBody Map<String,String> body)
+{
 
     String resume = body.get("resume");
 

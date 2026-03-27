@@ -10,24 +10,28 @@ import java.util.Map;
 @RestController
 @RequestMapping("/jobs")
 @CrossOrigin("*")
-public class JobListingController {
+public class JobListingController
+{
 
     @Value("${rapidapi.key:}")
     private String rapidApiKey;
 
     @PostMapping("/search")
-    public String searchJobs(@RequestBody Map<String, String> body) {
+    public String searchJobs(@RequestBody Map<String, String> body)
+    {
 
         String role = body.getOrDefault("role", "Java Developer");
         String location = body.getOrDefault("location", "India");
         String page = body.getOrDefault("page", "1");
 
         // RapidAPI key नसेल तर mock data
-        if (rapidApiKey == null || rapidApiKey.isEmpty()) {
+        if (rapidApiKey == null || rapidApiKey.isEmpty())
+        {
             return getMockJobs(role, location);
         }
 
-        try {
+        try
+        {
             String url = "https://jsearch.p.rapidapi.com/search?query="
                     + java.net.URLEncoder.encode(role + " in " + location, "UTF-8")
                     + "&page=" + page
@@ -45,14 +49,17 @@ public class JobListingController {
 
             return response.getBody();
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             e.printStackTrace();
             return getMockJobs(role, location);
         }
     }
 
     // Mock data (API key नसताना)
-    private String getMockJobs(String role, String location) {
+    private String getMockJobs(String role, String location)
+    {
         return """
         {
           "data": [

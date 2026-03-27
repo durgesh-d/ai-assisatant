@@ -12,7 +12,8 @@ import com.aicareer.resume.service.UserService;
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin("*")
-public class AuthController {
+public class AuthController
+{
 
     @Autowired
     private UserService service;
@@ -21,12 +22,14 @@ public class AuthController {
     private JwtUtil jwtUtil;
 
     @PostMapping("/register")
-    public User register(@RequestBody User user) {
+    public User register(@RequestBody User user) 
+    {
         return service.register(user);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User user) {
+    public ResponseEntity<?> login(@RequestBody User user) 
+    {
         User u = service.login(user.getEmail(), user.getPassword());
         if (u != null) {
             String token = jwtUtil.generateToken(u.getEmail());
@@ -36,27 +39,33 @@ public class AuthController {
     }
 
     @GetMapping("/validate")
-    public ResponseEntity<?> validate(@RequestHeader("Authorization") String header) {
-        if (header == null || !header.startsWith("Bearer ")) {
+    public ResponseEntity<?> validate(@RequestHeader("Authorization") String header)
+    {
+        if (header == null || !header.startsWith("Bearer ")) 
+        {
             return ResponseEntity.status(401).body("Invalid");
         }
         String token = header.substring(7);
-        if (!jwtUtil.validateToken(token)) {
+        if (!jwtUtil.validateToken(token))
+        {
             return ResponseEntity.status(401).body("Invalid");
         }
         return ResponseEntity.ok("Valid");
     }
 
-    // 🔥 GitHub OAuth2 Success
+    // GitHub OAuth2 Success
     @GetMapping("/oauth2-success")
     public void oauth2Success(HttpServletResponse response,
-                              java.security.Principal principal) throws Exception {
+                              java.security.Principal principal) throws Exception 
+    {
         if (principal != null) {
             String email = principal.getName();
             String token = jwtUtil.generateToken(email);
-            // ✅ Dashboard वर redirect
+            //  Dashboard वर redirect
             response.sendRedirect("/dashboard.html?token=" + token + "&github=verified");
-        } else {
+        } 
+        else 
+        {
             response.sendRedirect("/login.html?error=true");
         }
     }
