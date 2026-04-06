@@ -491,7 +491,7 @@ async function login() {
     errorBox.style.display = "none";
 
     if (!email || !password) {
-        errorMsg.innerText = "⚠️ Email आणि Password टाका";
+        errorMsg.innerText = "⚠️ Enter Email And Password";
         errorBox.style.display = "flex"; return;
     }
 
@@ -515,11 +515,11 @@ async function login() {
             localStorage.removeItem("github_verified");
             window.location.href = "/oauth2/authorization/github";
         } else {
-            errorMsg.innerText = "❌ Invalid Email किंवा Password";
+            errorMsg.innerText = "❌ Invalid Credintials";
             errorBox.style.display = "flex";
         }
     } catch (e) {
-        errorMsg.innerText = "❌ Server Error — परत try करा";
+        errorMsg.innerText = "❌ Server Error — Please try Leter";
         errorBox.style.display = "flex";
     }
 }
